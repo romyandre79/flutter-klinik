@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.kreatifmajumu" "\0"
-            VALUE "FileDescription", "kreatifmajumu_pos_offline" "\0"
+            VALUE "FileDescription", "kreatif_klinik" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "kreatifmajumu_pos_offline" "\0"
+            VALUE "InternalName", "kreatif_klinik" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.kreatifmajumu. All rights reserved." "\0"
-            VALUE "OriginalFilename", "kreatifmajumu_pos_offline.exe" "\0"
-            VALUE "ProductName", "kreatifmajumu_pos_offline" "\0"
+            VALUE "OriginalFilename", "kreatif_klinik.exe" "\0"
+            VALUE "ProductName", "kreatif_klinik" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

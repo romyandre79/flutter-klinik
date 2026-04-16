@@ -8,7 +8,7 @@ class AppConstants {
 
   // Database
   static const String databaseName = 'kreatif_klinik_offline.db';
-  static const int databaseVersion = 10;
+  static const int databaseVersion = 11;
 
   // Invoice
   static const String defaultInvoicePrefix = 'Klinik';

@@ -20,6 +20,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _notesController = TextEditingController();
+  final _defaultDiscountController = TextEditingController();
 
   bool get isEditing => widget.customer != null;
 
@@ -31,6 +32,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       _phoneController.text = widget.customer!.phone ?? '';
       _addressController.text = widget.customer!.address ?? '';
       _notesController.text = widget.customer!.notes ?? '';
+      _defaultDiscountController.text = widget.customer!.defaultDiscount.toString();
     }
   }
 
@@ -40,6 +42,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _notesController.dispose();
+    _defaultDiscountController.dispose();
     super.dispose();
   }
 
@@ -58,6 +61,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
+      defaultDiscount: double.tryParse(_defaultDiscountController.text) ?? 0,
       totalOrders: widget.customer?.totalOrders ?? 0,
       totalSpent: widget.customer?.totalSpent ?? 0,
       createdAt: widget.customer?.createdAt,
@@ -113,6 +117,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
                       // Form Card
                       _buildFormCard(),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Discount Card
+                      _buildDiscountCard(),
 
                       const SizedBox(height: AppSpacing.lg),
 
@@ -318,10 +327,65 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
             style: AppTypography.bodyMedium,
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            decoration: _buildInputDecoration(
+              hintText: 'Tambahkan catatan khusus...',
+              prefixIcon: Icons.note_outlined,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscountCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadius.lgRadius,
+        boxShadow: AppShadows.card,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  gradient: AppThemeColors.primaryGradient,
+                  borderRadius: AppRadius.fullRadius,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Privilage Member',
+                style: AppTypography.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildInputLabel('Default Diskon Member (%)'),
+          const SizedBox(height: AppSpacing.sm),
+          TextFormField(
+            controller: _defaultDiscountController,
+            style: AppTypography.bodyMedium,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textInputAction: TextInputAction.done,
             decoration: _buildInputDecoration(
-              hintText: 'Catatan tambahan (opsional)',
-              prefixIcon: Icons.note_outlined,
+              hintText: 'Contoh: 10',
+              prefixIcon: Icons.percent_outlined,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Diskon ini akan otomatis teraplikasi saat pelanggan dipilih di POS.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppThemeColors.textSecondary,
             ),
           ),
         ],

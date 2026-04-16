@@ -88,6 +88,7 @@ class OrderCubit extends Cubit<OrderState> {
     int initialPayment = 0,
     PaymentMethod paymentMethod = PaymentMethod.cash,
     OrderStatus status = OrderStatus.pending,
+    int totalDiscount = 0,
   }) async {
     if (AppConstants.isDemoMode) {
       final allOrders = await _orderRepository.getAllOrders();
@@ -129,15 +130,19 @@ class OrderCubit extends Cubit<OrderState> {
         }
       }
 
-      // Calculate totals
-      int totalItems = items.length;
+      int totalGross = 0;
+      int itemDiscounts = 0;
       double totalWeight = 0;
-      int totalPrice = 0;
+      int totalItems = items.length;
 
       for (final item in items) {
         totalWeight += item.quantity;
-        totalPrice += item.subtotal;
+        totalGross += (item.pricePerUnit * item.quantity).round();
+        itemDiscounts += (item.discount * item.quantity).round();
       }
+      
+      final combinedDiscount = itemDiscounts + totalDiscount;
+      final totalPrice = totalGross - combinedDiscount;
 
       // Generate invoice
       final invoiceNo = await InvoiceGenerator.generate();
@@ -159,6 +164,7 @@ class OrderCubit extends Cubit<OrderState> {
         totalItems: totalItems,
         totalWeight: totalWeight,
         totalPrice: totalPrice,
+        totalDiscount: combinedDiscount,
         paid: paidAmount,
         notes: notes?.trim(),
         createdBy: createdBy,
@@ -187,7 +193,11 @@ class OrderCubit extends Cubit<OrderState> {
       // Deduct stock for each item
       for (final item in items) {
         if (item.productId != null) {
-          await _productRepository.updateStock(item.productId!, -(item.quantity));
+          await _productRepository.updateStock(
+            item.productId!,
+            -(item.quantity),
+            unitId: item.unitId,
+          );
         }
       }
 

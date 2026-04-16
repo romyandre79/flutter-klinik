@@ -22,6 +22,7 @@ class PosLoaded extends PosState {
   final String searchQuery;
   final Customer? selectedCustomer;
   final String customerName;
+  final int orderDiscount;
 
   const PosLoaded({
     this.products = const [],
@@ -31,10 +32,14 @@ class PosLoaded extends PosState {
     this.searchQuery = '',
     this.selectedCustomer,
     this.customerName = 'Walk-in Customer',
+    this.orderDiscount = 0,
   });
 
-  int get totalAmount => cartItems.fold(0, (sum, item) => sum + item.subtotal);
-  int get totalItems => cartItems.fold(0, (sum, item) => sum + item.quantity);
+  int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.product.price * item.quantity).round());
+  int get totalItems => cartItems.fold(0, (sum, item) => sum + item.quantity.round());
+  int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + (item.discount * item.quantity).round());
+  int get totalDiscount => totalItemDiscount + orderDiscount;
+  int get grandTotal => totalAmount - totalDiscount;
 
   PosLoaded copyWith({
     List<Product>? products,
@@ -44,6 +49,7 @@ class PosLoaded extends PosState {
     String? searchQuery,
     Customer? selectedCustomer,
     String? customerName,
+    int? orderDiscount,
   }) {
     return PosLoaded(
       products: products ?? this.products,
@@ -53,6 +59,7 @@ class PosLoaded extends PosState {
       searchQuery: searchQuery ?? this.searchQuery,
       selectedCustomer: selectedCustomer ?? this.selectedCustomer,
       customerName: customerName ?? this.customerName,
+      orderDiscount: orderDiscount ?? this.orderDiscount,
     );
   }
 
@@ -65,6 +72,7 @@ class PosLoaded extends PosState {
         searchQuery,
         selectedCustomer,
         customerName,
+        orderDiscount,
       ];
 }
 

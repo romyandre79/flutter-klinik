@@ -26,6 +26,7 @@ import 'package:flutter_pos_offline/presentation/screens/pos/pos_screen.dart';
 import 'package:flutter_pos_offline/presentation/screens/pengumuman/pengumuman_screen.dart';
 import 'package:flutter_pos_offline/presentation/screens/reminder/reminder_screen.dart';
 import 'package:flutter_pos_offline/presentation/screens/inventory/stock_transfer_screen.dart';
+import 'package:flutter_pos_offline/presentation/screens/inventory/unit_conversion_screen.dart';
 import 'package:flutter_pos_offline/logic/cubits/pengumuman/pengumuman_cubit.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -488,13 +489,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(
               child: _buildQuickActionItem(
                 icon: Icons.swap_horiz,
-                label: 'Transfer Stok',
+                label: 'Transfer',
                 color: Colors.teal,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => const StockTransferScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _buildQuickActionItem(
+                icon: Icons.unfold_more,
+                label: 'Konversi',
+                color: Colors.indigo,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const UnitConversionScreen(),
                     ),
                   );
                 },

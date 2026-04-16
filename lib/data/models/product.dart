@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter_pos_offline/data/models/product_unit.dart';
 
 enum ProductType { service, goods }
 
@@ -49,6 +50,7 @@ class Product extends Equatable {
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final List<ProductUnit> units;
 
   const Product({
     this.id,
@@ -66,7 +68,33 @@ class Product extends Equatable {
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
+    this.units = const [],
   });
+
+  ProductUnit? get baseUnit {
+    if (units.isEmpty) return null;
+    try {
+      return units.firstWhere((u) => u.parentUnitId == null);
+    } catch (_) {
+      return units.first;
+    }
+  }
+
+  // Get display stock in multiple units (Box, Strip, Tablet)
+  String get stockDisplay {
+    if (type == ProductType.service || units.isEmpty) return '∞';
+    
+    // For now, let's just show the individual physical stocks
+    List<String> parts = [];
+    for (var u in units) {
+      if (u.stock > 0) {
+        parts.add('${u.stock.toStringAsFixed(0)} ${u.unitName}');
+      }
+    }
+    
+    if (parts.isEmpty) return '0 $unit';
+    return parts.join(', ');
+  }
 
   bool get isService => type == ProductType.service;
   bool get isGoods => type == ProductType.goods;
@@ -91,7 +119,7 @@ class Product extends Equatable {
     };
   }
 
-  factory Product.fromMap(Map<String, dynamic> map) {
+  factory Product.fromMap(Map<String, dynamic> map, {List<ProductUnit> units = const []}) {
     return Product(
       id: map['id'] as int?,
       name: map['name'] as String,
@@ -112,6 +140,7 @@ class Product extends Equatable {
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'] as String)
           : null,
+      units: units,
     );
   }
 
@@ -131,6 +160,7 @@ class Product extends Equatable {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<ProductUnit>? units,
   }) {
     return Product(
       id: id ?? this.id,
@@ -148,6 +178,7 @@ class Product extends Equatable {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      units: units ?? this.units,
     );
   }
 
@@ -168,5 +199,6 @@ class Product extends Equatable {
         isActive,
         createdAt,
         updatedAt,
+        units,
       ];
 }

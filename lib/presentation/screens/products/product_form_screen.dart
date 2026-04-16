@@ -40,6 +40,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   ProductType _selectedType = ProductType.service;
   String _selectedUnit = 'pcs';
+  List<ProductUnit> _units = [];
 
   @override
   void initState() {
@@ -56,9 +57,22 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     if (product != null) {
       _selectedType = product.type;
       _selectedUnit = product.unit;
+      _units = List.from(product.units);
       if (product.imageUrl != null) {
         _imageFile = File(product.imageUrl!);
       }
+    } else {
+      // Default base unit
+      _units = [
+        const ProductUnit(
+          productId: 0,
+          unitName: 'pcs',
+          price: 0,
+          cost: 0,
+          multiplier: 1,
+          stock: 0,
+        )
+      ];
     }
   }
 
@@ -189,6 +203,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             ? int.tryParse(_durationController.text) ?? 1 
             : null,
         imageUrl: imagePath ?? widget.product?.imageUrl,
+        units: _units,
       );
 
       if (widget.product == null) {
@@ -225,6 +240,60 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           ],
         ),
       );
+  }
+
+  void _addUnit(String unitName) {
+    setState(() {
+      _units.add(ProductUnit(
+        productId: widget.product?.id ?? 0,
+        unitName: unitName,
+        price: 0,
+        multiplier: 1,
+        stock: 0,
+        parentUnitId: _units.isNotEmpty ? _units.last.id : null, 
+      ));
+    });
+  }
+
+  void _removeUnit(int index) {
+    if (_units.length <= 1) return; // Must have at least one unit
+    setState(() {
+      _units.removeAt(index);
+    });
+  }
+
+  void _showAddUnitDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String newUnit = 'pcs';
+        return AlertDialog(
+          title: const Text('Tambah Satuan'),
+          content: BlocBuilder<UnitCubit, UnitState>(
+            builder: (context, state) {
+              List<Unit> units = [];
+              if (state is UnitLoaded) units = state.units;
+              return DropdownButtonFormField<String>(
+                value: units.any((u) => u.name == 'pcs') ? 'pcs' : (units.isNotEmpty ? units.first.name : null),
+                items: units.map((u) => DropdownMenuItem(value: u.name, child: Text(u.name))).toList(),
+                onChanged: (val) { if (val != null) newUnit = val; },
+                decoration: const InputDecoration(labelText: 'Pilih Satuan'),
+              );
+            },
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+            TextButton(
+              onPressed: () {
+                _addUnit(newUnit);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Tambah'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -481,6 +550,111 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       return 'Harus berupa angka';
                     }
                     return null;
+                  },
+                ),
+              ],
+              
+              const SizedBox(height: AppSpacing.lg),
+              
+              if (_selectedType == ProductType.goods) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Satuan & Harga Multi-Level', style: AppTypography.titleMedium),
+                    TextButton.icon(
+                      onPressed: _showAddUnitDialog,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Tambah Satuan'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _units.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (context, index) {
+                    final unit = _units[index];
+                    bool isBase = index == 0;
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppRadius.mdRadius,
+                        borderSide: BorderSide(color: AppThemeColors.border),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  unit.unitName.toUpperCase(),
+                                  style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                if (!isBase)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    onPressed: () => _removeUnit(index),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: TextFormField(
+                                    initialValue: unit.price.toString(),
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(labelText: 'Harga Jual', prefixText: 'Rp '),
+                                    onChanged: (val) {
+                                      _units[index] = _units[index].copyWith(price: int.tryParse(val) ?? 0);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  flex: 2,
+                                  child: TextFormField(
+                                    initialValue: unit.stock.toString(),
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(labelText: 'Stok Phisik'),
+                                    onChanged: (val) {
+                                      _units[index] = _units[index].copyWith(stock: double.tryParse(val) ?? 0.0);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (!isBase) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      initialValue: unit.multiplier.toString(),
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        labelText: 'Isi per ${_units[index-1].unitName}',
+                                        suffixText: unit.unitName,
+                                      ),
+                                      onChanged: (val) {
+                                        _units[index] = _units[index].copyWith(multiplier: double.tryParse(val) ?? 1.0);
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],

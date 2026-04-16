@@ -10,7 +10,8 @@ import 'package:flutter_pos_offline/logic/cubits/pos/pos_cubit.dart';
 import 'package:flutter_pos_offline/logic/cubits/pos/pos_state.dart';
 import 'package:flutter_pos_offline/data/models/customer.dart';
 import 'package:flutter_pos_offline/data/repositories/customer_repository.dart';
-import 'package:flutter_pos_offline/data/models/order.dart'; // Add OrderStatus import
+import 'package:flutter_pos_offline/data/models/order.dart'; 
+import 'package:flutter_pos_offline/data/models/cart_item.dart';
 import 'package:flutter_pos_offline/presentation/widgets/payment_dialog.dart';
 
 class CartPanel extends StatelessWidget {
@@ -81,10 +82,12 @@ class CartPanel extends StatelessWidget {
       return OrderItem(
         orderId: 0, // Placeholder
         productId: item.product.id,
-        serviceName: item.product.name, // Using serviceName for product name compatibility
+        unitId: item.selectedUnit?.id,
+        serviceName: item.product.name,
         quantity: item.quantity.toDouble(),
-        unit: item.product.unit,
-        pricePerUnit: item.product.price,
+        unit: item.selectedUnit?.unitName ?? item.product.unit,
+        pricePerUnit: item.selectedUnit?.price ?? item.product.price,
+        discount: item.discount,
         subtotal: item.subtotal,
       );
     }).toList();
@@ -98,6 +101,7 @@ class CartPanel extends StatelessWidget {
       initialPayment: paidAmount,
       paymentMethod: paymentMethod,
       status: status,
+      totalDiscount: posState.orderDiscount,
       createdBy: 1, // TODO: Get from AuthCubit
     );
   }
@@ -220,9 +224,54 @@ class CartPanel extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(item.product.name, style: AppTypography.bodyMedium),
-                                    Text(
-                                      '@ ${CurrencyFormatter.format(item.product.price)}',
-                                      style: AppTypography.bodySmall,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          CurrencyFormatter.format(item.product.price),
+                                          style: AppTypography.bodySmall,
+                                        ),
+                                        if (item.discount > 0) ...[
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '-${CurrencyFormatter.format(item.discount)}',
+                                            style: AppTypography.bodySmall.copyWith(color: AppThemeColors.error),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    // Unit Selector
+                                    if (item.product.units.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton<ProductUnit>(
+                                            value: item.selectedUnit ?? item.product.baseUnit,
+                                            isDense: true,
+                                            style: AppTypography.labelSmall.copyWith(color: AppThemeColors.primary),
+                                            items: item.product.units.map((u) {
+                                              return DropdownMenuItem(
+                                                value: u,
+                                                child: Text(u.unitName),
+                                              );
+                                            }).toList(),
+                                            onChanged: (val) {
+                                              if (val != null) {
+                                                context.read<PosCubit>().updateUnit(item, val);
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    // Discount Input Trigger
+                                    InkWell(
+                                      onTap: () => _showItemDiscountDialog(context, item),
+                                      child: Text(
+                                        'Diskon: ${CurrencyFormatter.format(item.discount)}',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: AppThemeColors.primary,
+                                          height: 1.5,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -246,9 +295,14 @@ class CartPanel extends StatelessWidget {
             // Footer (Total & Checkout)
             BlocBuilder<PosCubit, PosState>(
               builder: (context, state) {
-                int total = 0;
+                int grossTotal = 0;
+                int totalDiscount = 0;
+                int grandTotal = 0;
+                
                 if (state is PosLoaded) {
-                   total = state.totalAmount;
+                   grossTotal = state.totalAmount;
+                   totalDiscount = state.totalDiscount;
+                   grandTotal = state.grandTotal;
                 }
 
                 return Container(
@@ -259,13 +313,28 @@ class CartPanel extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
+                      _buildSummaryRow('Total Nilai', grossTotal),
+                      _buildSummaryRow(
+                        'Diskon Tambahan', 
+                        state is PosLoaded ? state.orderDiscount : 0,
+                        isClickable: true,
+                        onTap: () => _showOrderDiscountDialog(context, state as PosLoaded),
+                      ),
+                      _buildSummaryRow('Total Diskon', totalDiscount, color: AppThemeColors.error),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Divider(height: 1),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Total', style: AppTypography.titleMedium),
+                          Text('Total Bayar', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
                           Text(
-                            CurrencyFormatter.format(total),
-                            style: AppTypography.titleLarge.copyWith(color: AppThemeColors.primary),
+                            CurrencyFormatter.format(grandTotal),
+                            style: AppTypography.titleLarge.copyWith(
+                              color: AppThemeColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -276,11 +345,11 @@ class CartPanel extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                           ),
-                          onPressed: total > 0 
-                            ? () => _handleCharge(context, total)
+                          onPressed: grandTotal > 0 
+                            ? () => _handleCharge(context, grandTotal)
                             : null,
                           child: Text(
-                             total > 0 ? 'Bayar ${CurrencyFormatter.format(total)}' : 'Bayar',
+                             grandTotal > 0 ? 'Bayar ${CurrencyFormatter.format(grandTotal)}' : 'Bayar',
                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -292,6 +361,94 @@ class CartPanel extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, int value, {Color? color, bool isClickable = false, VoidCallback? onTap}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label, 
+              style: AppTypography.bodySmall.copyWith(
+                color: isClickable ? AppThemeColors.primary : AppThemeColors.textSecondary,
+                decoration: isClickable ? TextDecoration.underline : null,
+              )
+            ),
+            Text(
+              CurrencyFormatter.format(value),
+              style: AppTypography.bodySmall.copyWith(
+                color: color ?? AppThemeColors.textPrimary,
+                fontWeight: color != null ? FontWeight.bold : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showItemDiscountDialog(BuildContext context, CartItem item) {
+    final controller = TextEditingController(text: item.discount.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Diskon ${item.product.name} (Rp)'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Masukkan nilai Rupiah',
+            prefixText: 'Rp ',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text) ?? 0;
+              context.read<PosCubit>().updateItemDiscount(item.product, val);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOrderDiscountDialog(BuildContext context, PosLoaded state) {
+    final controller = TextEditingController(text: state.orderDiscount.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Diskon Tambahan Pesanan (Rp)'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Masukkan nilai Rupiah',
+            prefixText: 'Rp ',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text) ?? 0;
+              context.read<PosCubit>().updateOrderDiscount(val);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
       ),
     );
   }

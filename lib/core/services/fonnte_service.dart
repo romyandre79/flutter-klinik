@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_pos_offline/data/repositories/settings_repository.dart';
+import 'package:kreatif_klinik/data/repositories/settings_repository.dart';
+
 
 class FonnteService {
   static final FonnteService _instance = FonnteService._internal();

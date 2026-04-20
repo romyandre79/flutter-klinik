@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:flutter_pos_printer_platform/flutter_pos_printer_platform.dart'; // Removed
-import 'package:flutter_pos_offline/core/services/printer_service.dart';
-import 'package:flutter_pos_offline/data/models/order.dart';
-import 'package:flutter_pos_offline/logic/cubits/printer/printer_state.dart';
+import 'package:kreatif_klinik/core/services/printer_service.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/logic/cubits/printer/printer_state.dart';
 
 class PrinterCubit extends Cubit<PrinterState> {
   final PrinterService _printerService;

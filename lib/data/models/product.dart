@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_pos_offline/data/models/product_unit.dart';
+import 'package:kreatif_klinik/data/models/product_unit.dart';
 
 enum ProductType { service, goods }
 
@@ -48,6 +48,7 @@ class Product extends Equatable {
   final String? imageUrl;
   final String? barcode; // New field for barcode
   final bool isActive;
+  final int? serverId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final List<ProductUnit> units;
@@ -66,6 +67,7 @@ class Product extends Equatable {
     this.imageUrl,
     this.barcode,
     this.isActive = true,
+    this.serverId,
     this.createdAt,
     this.updatedAt,
     this.units = const [],
@@ -114,6 +116,7 @@ class Product extends Equatable {
       'image_url': imageUrl,
       'barcode': barcode,
       'is_active': isActive ? 1 : 0,
+      'server_id': serverId,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -134,6 +137,7 @@ class Product extends Equatable {
       imageUrl: map['image_url'] as String?,
       barcode: map['barcode'] as String?,
       isActive: (map['is_active'] as int?) == 1,
+      serverId: map['server_id'] as int?,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
           : null,
@@ -158,6 +162,7 @@ class Product extends Equatable {
     String? barcode,
     int? expireDays,
     bool? isActive,
+    int? serverId,
     DateTime? createdAt,
     DateTime? updatedAt,
     List<ProductUnit>? units,
@@ -176,6 +181,7 @@ class Product extends Equatable {
       imageUrl: imageUrl ?? this.imageUrl,
       barcode: barcode ?? this.barcode,
       isActive: isActive ?? this.isActive,
+      serverId: serverId ?? this.serverId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       units: units ?? this.units,
@@ -197,6 +203,7 @@ class Product extends Equatable {
         imageUrl,
         barcode,
         isActive,
+        serverId,
         createdAt,
         updatedAt,
         units,

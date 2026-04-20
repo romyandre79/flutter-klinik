@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_pos_offline/data/models/unit.dart';
+import 'package:kreatif_klinik/data/models/unit.dart';
 
 abstract class UnitState extends Equatable {
   const UnitState();

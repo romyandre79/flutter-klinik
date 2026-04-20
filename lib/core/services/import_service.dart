@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
-import 'package:flutter_pos_offline/data/models/product.dart';
-import 'package:flutter_pos_offline/data/models/customer.dart';
-import 'package:flutter_pos_offline/data/models/supplier.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
+import 'package:kreatif_klinik/data/models/supplier.dart';
 
 class ImportService {
   static final ImportService _instance = ImportService._internal();

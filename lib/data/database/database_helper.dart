@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_pos_offline/core/constants/app_constants.dart';
-import 'package:flutter_pos_offline/core/utils/password_helper.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/core/utils/password_helper.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -80,6 +80,7 @@ class DatabaseHelper {
         total_spent INTEGER DEFAULT 0,
         last_order_date TEXT,
         default_discount REAL DEFAULT 0,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -115,6 +116,7 @@ class DatabaseHelper {
         image_url TEXT,
         barcode TEXT,
         is_active INTEGER DEFAULT 1,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -138,6 +140,8 @@ class DatabaseHelper {
         paid INTEGER DEFAULT 0,
         notes TEXT,
         created_by INTEGER,
+        is_synced INTEGER DEFAULT 0,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
@@ -210,6 +214,7 @@ class DatabaseHelper {
         address TEXT,
         phone TEXT,
         email TEXT,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -225,6 +230,8 @@ class DatabaseHelper {
         status TEXT NOT NULL, -- pending, received, cancelled
         total_amount INTEGER DEFAULT 0,
         notes TEXT,
+        is_synced INTEGER DEFAULT 0,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE
@@ -253,6 +260,7 @@ class DatabaseHelper {
       CREATE TABLE units (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -776,6 +784,19 @@ class DatabaseHelper {
 
       // Add unit_id to order_items
       await db.execute('ALTER TABLE order_items ADD COLUMN unit_id INTEGER');
+    }
+
+    if (oldVersion < 12) {
+      // Add sync columns to multiple tables
+      await db.execute('ALTER TABLE orders ADD COLUMN is_synced INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE orders ADD COLUMN server_id INTEGER');
+      
+      await db.execute('ALTER TABLE products ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE customers ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE suppliers ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE units ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN is_synced INTEGER DEFAULT 0');
     }
   }
 

@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/data/models/cart_item.dart';
-import 'package:flutter_pos_offline/data/models/product.dart';
-import 'package:flutter_pos_offline/data/models/product_unit.dart';
-import 'package:flutter_pos_offline/data/models/customer.dart';
-import 'package:flutter_pos_offline/data/repositories/product_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/pos/pos_state.dart';
+import 'package:kreatif_klinik/data/models/cart_item.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
 
 class PosCubit extends Cubit<PosState> {
   final ProductRepository _productRepository;
@@ -49,7 +49,8 @@ class PosCubit extends Cubit<PosState> {
       String currentCategory = category ?? currentState.selectedCategory;
 
       List<Product> filtered = currentState.products.where((product) {
-        bool matchesQuery = product.name.toLowerCase().contains(currentQuery.toLowerCase());
+        bool matchesQuery = product.name.toLowerCase().contains(currentQuery.toLowerCase()) ||
+            (product.barcode != null && product.barcode!.toLowerCase().contains(currentQuery.toLowerCase()));
         bool matchesCategory = true;
 
           if (currentCategory == 'Kiloan') {

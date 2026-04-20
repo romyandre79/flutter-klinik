@@ -3,11 +3,6 @@ import 'package:equatable/equatable.dart';
 class OrderItem extends Equatable {
   final int? id;
   final int orderId;
-import 'package:equatable/equatable.dart';
-
-class OrderItem extends Equatable {
-  final int? id;
-  final int orderId;
   final int? serviceId; // Deprecated, kept for backward compatibility
   final int? productId; // New field
   final String serviceName; // Kept as name snapshot

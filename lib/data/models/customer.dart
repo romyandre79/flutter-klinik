@@ -10,6 +10,7 @@ class Customer extends Equatable {
   final int totalSpent;
   final DateTime? lastOrderDate;
   final double defaultDiscount;
+  final int? serverId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -23,6 +24,7 @@ class Customer extends Equatable {
     this.totalSpent = 0,
     this.lastOrderDate,
     this.defaultDiscount = 0,
+    this.serverId,
     this.createdAt,
     this.updatedAt,
   });
@@ -38,6 +40,7 @@ class Customer extends Equatable {
       'total_spent': totalSpent,
       'last_order_date': lastOrderDate?.toIso8601String(),
       'default_discount': defaultDiscount,
+      'server_id': serverId,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -56,6 +59,7 @@ class Customer extends Equatable {
           ? DateTime.parse(map['last_order_date'] as String)
           : null,
       defaultDiscount: (map['default_discount'] as num?)?.toDouble() ?? 0,
+      serverId: map['server_id'] as int?,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
           : null,
@@ -75,6 +79,7 @@ class Customer extends Equatable {
     int? totalSpent,
     DateTime? lastOrderDate,
     double? defaultDiscount,
+    int? serverId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -88,6 +93,7 @@ class Customer extends Equatable {
       totalSpent: totalSpent ?? this.totalSpent,
       lastOrderDate: lastOrderDate ?? this.lastOrderDate,
       defaultDiscount: defaultDiscount ?? this.defaultDiscount,
+      serverId: serverId ?? this.serverId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -124,6 +130,7 @@ class Customer extends Equatable {
         totalSpent,
         lastOrderDate,
         defaultDiscount,
+        serverId,
         createdAt,
         updatedAt,
       ];

@@ -7,8 +7,8 @@ class AppConstants {
   static const String appDescription = 'Aplikasi Kasir Klinik Offline - Full Offline, Jalan Tanpa Internet!';
 
   // Database
-  static const String databaseName = 'kreatif_klinik_offline.db';
-  static const int databaseVersion = 11;
+  static const String databaseName = 'kreatif_klinik.db';
+  static const int databaseVersion = 12;
 
   // Invoice
   static const String defaultInvoicePrefix = 'Klinik';

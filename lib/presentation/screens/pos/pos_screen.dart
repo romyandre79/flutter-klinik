@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/logic/cubits/pos/pos_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/pos/widgets/cart_panel.dart';
-import 'package:flutter_pos_offline/presentation/screens/pos/widgets/service_catalog.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/pos/widgets/cart_panel.dart';
+import 'package:kreatif_klinik/presentation/screens/pos/widgets/service_catalog.dart';
 
 class PosScreen extends StatelessWidget {
   const PosScreen({super.key});

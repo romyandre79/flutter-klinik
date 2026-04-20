@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/core/utils/currency_formatter.dart';
-import 'package:flutter_pos_offline/data/models/product.dart';
-import 'package:flutter_pos_offline/data/models/product_unit.dart';
-import 'package:flutter_pos_offline/data/repositories/product_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/product/product_state.dart';
+
 
 class UnitConversionScreen extends StatefulWidget {
   const UnitConversionScreen({super.key});
@@ -168,7 +170,7 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.mdRadius,
-        borderSide: BorderSide(color: AppThemeColors.border),
+        side: BorderSide(color: AppThemeColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),

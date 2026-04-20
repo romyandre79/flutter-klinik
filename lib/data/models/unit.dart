@@ -5,12 +5,14 @@ class Unit extends Equatable {
   final String name;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? serverId;
 
   const Unit({
     this.id,
     required this.name,
     this.createdAt,
     this.updatedAt,
+    this.serverId,
   });
 
   Map<String, dynamic> toMap() {
@@ -19,6 +21,7 @@ class Unit extends Equatable {
       'name': name,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'server_id': serverId,
     };
   }
 
@@ -32,6 +35,7 @@ class Unit extends Equatable {
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'] as String)
           : null,
+      serverId: map['server_id'] as int?,
     );
   }
 
@@ -40,15 +44,17 @@ class Unit extends Equatable {
     String? name,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? serverId,
   }) {
     return Unit(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      serverId: serverId ?? this.serverId,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, createdAt, updatedAt];
+  List<Object?> get props => [id, name, createdAt, updatedAt, serverId];
 }

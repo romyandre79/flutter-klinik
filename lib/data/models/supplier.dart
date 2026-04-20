@@ -7,6 +7,7 @@ class Supplier {
   final String? email;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? serverId;
 
   Supplier({
     this.id,
@@ -17,6 +18,7 @@ class Supplier {
     this.email,
     this.createdAt,
     this.updatedAt,
+    this.serverId,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +31,7 @@ class Supplier {
       'email': email,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'server_id': serverId,
     };
   }
 
@@ -42,6 +45,7 @@ class Supplier {
       email: map['email'] as String?,
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
+      serverId: map['server_id'] as int?,
     );
   }
 
@@ -54,6 +58,7 @@ class Supplier {
     String? email,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? serverId,
   }) {
     return Supplier(
       id: id ?? this.id,
@@ -64,6 +69,7 @@ class Supplier {
       email: email ?? this.email,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      serverId: serverId ?? this.serverId,
     );
   }
 }

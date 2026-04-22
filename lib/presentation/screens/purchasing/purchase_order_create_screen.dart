@@ -17,6 +17,8 @@ import 'package:kreatif_klinik/presentation/screens/purchasing/purchase_order_de
 import 'package:kreatif_klinik/data/models/unit.dart';
 import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
 import 'package:kreatif_klinik/logic/cubits/unit/unit_state.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_supplier_picker.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
 
 class PurchaseOrderCreateScreen extends StatefulWidget {
   const PurchaseOrderCreateScreen({super.key});
@@ -100,14 +102,14 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
   void _submit() {
     if (_selectedSupplier == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a supplier')),
+        const SnackBar(content: Text('Pilih Supplier ...')),
       );
       return;
     }
 
     if (_items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one item')),
+        const SnackBar(content: Text('Item belum ditambahkan')),
       );
       return;
     }
@@ -180,19 +182,10 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
               color: Colors.white,
               child: Column(
                 children: [
-                   // Supplier Dropdown
-                   BlocBuilder<SupplierCubit, SupplierState>(
-                     builder: (context, state) {
-                       if (state is SupplierLoaded) {
-                         return DropdownButtonFormField<Supplier>(
-                           initialValue: _selectedSupplier,
-                           decoration: const InputDecoration(labelText: 'Supplier'),
-                           items: state.suppliers.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
-                           onChanged: (val) => setState(() => _selectedSupplier = val),
-                         );
-                       }
-                       return const LinearProgressIndicator(); // Loading suppliers
-                     },
+                   // Supplier Picker
+                   SearchableSupplierPicker(
+                     selectedSupplier: _selectedSupplier,
+                     onSupplierSelected: (val) => setState(() => _selectedSupplier = val),
                    ),
                    const SizedBox(height: AppSpacing.sm),
                    // Tgl Kedatangan
@@ -483,33 +476,14 @@ class _PurchaseOrderItemEditorState extends State<PurchaseOrderItemEditor> {
               ),
               const SizedBox(height: AppSpacing.md),
               
-              // Unit Dropdown
-              BlocBuilder<UnitCubit, UnitState>(
-                builder: (context, state) {
-                  List<Unit> units = [];
-                  if (state is UnitLoaded) units = state.units;
-                  else if (state is UnitOperationSuccess) units = state.units;
-                  
-                  final isValid = units.any((u) => u.name == _selectedUnit);
-                  
-                  // Use first unit if list not empty and invalid selection? 
-                  // Or use null to force selection.
-                  // If units empty, we have a problem (seed data should exist).
-                  
-                  return DropdownButtonFormField<String>(
-                    value: isValid ? _selectedUnit : null,
-                    decoration: const InputDecoration(
-                      labelText: 'Satuan',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                    ),
-                    items: units.map((u) => DropdownMenuItem(value: u.name, child: Text(u.name))).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedUnit = val);
-                    },
-                    validator: (val) => val == null || val.isEmpty ? 'Pilih satuan' : null,
-                  );
-                },
+              // Unit Selection
+              SearchableUnitPicker(
+                label: 'Satuan',
+                selectedUnit: _selectedUnit,
+                manualUnits: _selectedProduct != null 
+                    ? _selectedProduct!.units.map((u) => u.unitName).toList()
+                    : [_selectedUnit],
+                onUnitSelected: (val) => setState(() => _selectedUnit = val),
               ),
               const SizedBox(height: AppSpacing.md),
 

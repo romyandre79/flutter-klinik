@@ -460,21 +460,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                           // Store Info Section
                           _buildSection(
-                            title: 'Informasi Toko',
+                            title: 'Informasi Apotik/Klinik',
                             children: [
                               _buildSettingTile(
                                 context: context,
                                 icon: Icons.store,
-                                title: 'Nama Toko',
+                                title: 'Nama Apotik/Klinik',
                                 subtitle:
                                     storeInfo?.name ??
                                     AppConstants.defaultStoreName,
                                 onTap: () => _showEditDialog(
-                                  title: 'Ubah Data Nama Toko',
+                                  title: 'Ubah Data Nama Apotik/Klinik',
                                   currentValue:
                                       storeInfo?.name ??
                                       AppConstants.defaultStoreName,
-                                  hint: 'Masukkan nama toko',
+                                  hint: 'Masukkan nama Apotik/Klinik',
                                   icon: Icons.store,
                                   onSave: (value) =>
                                       _settingsCubit.updateStoreName(value),
@@ -493,7 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   currentValue:
                                       storeInfo?.address ??
                                       AppConstants.defaultStoreAddress,
-                                  hint: 'Masukkan alamat toko',
+                                  hint: 'Masukkan alamat Apotik/Klinik',
                                   icon: Icons.location_on,
                                   maxLines: 2,
                                   onSave: (value) => _settingsCubit

@@ -3,16 +3,20 @@ import 'package:kreatif_klinik/data/models/order.dart';
 import 'package:kreatif_klinik/data/models/order_item.dart';
 import 'package:kreatif_klinik/data/models/payment.dart';
 import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
 
 class OrderRepository {
   final DatabaseHelper _databaseHelper;
   final CustomerRepository _customerRepository;
+  final ProductRepository _productRepository;
 
   OrderRepository({
     DatabaseHelper? databaseHelper,
     CustomerRepository? customerRepository,
+    ProductRepository? productRepository,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper.instance,
-        _customerRepository = customerRepository ?? CustomerRepository();
+        _customerRepository = customerRepository ?? CustomerRepository(),
+        _productRepository = productRepository ?? ProductRepository();
 
   /// Get all orders with optional filter and pagination
   Future<List<Order>> getAllOrders({
@@ -154,9 +158,11 @@ class OrderRepository {
       if (order.status == OrderStatus.done) {
         for (final item in items) {
           if (item.productId != null) {
-            await txn.rawUpdate(
-              'UPDATE products SET stock = COALESCE(stock, 0) - ?, updated_at = ? WHERE id = ?',
-              [item.quantity, DateTime.now().toIso8601String(), item.productId],
+            await _productRepository.updateStockByUnitName(
+              txn, 
+              item.productId!, 
+              item.unit, 
+              -item.quantity.toDouble(), // Negative for deduction
             );
           }
         }
@@ -223,9 +229,12 @@ class OrderRepository {
           final quantity = (itemMap['quantity'] as num?)?.toDouble() ?? 0.0;
 
           if (productId != null) {
-            await txn.rawUpdate(
-              'UPDATE products SET stock = COALESCE(stock, 0) - ?, updated_at = ? WHERE id = ?',
-              [quantity, DateTime.now().toIso8601String(), productId],
+            final unitName = itemMap['unit'] as String? ?? 'pcs';
+            await _productRepository.updateStockByUnitName(
+              txn, 
+              productId, 
+              unitName, 
+              -quantity, // Negative for deduction
             );
           }
         }
@@ -271,7 +280,7 @@ class OrderRepository {
 
     final result = await db.query(
       'orders',
-      where: 'order_date >= ? AND order_date <= ?',
+      where: 'DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
       whereArgs: [startStr, endStr],
       orderBy: 'created_at DESC',
     );
@@ -305,7 +314,7 @@ class OrderRepository {
     final counts = <OrderStatus, int>{};
     for (final status in OrderStatus.values) {
       final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM orders WHERE status = ? AND created_at >= ? AND created_at <= ?',
+        'SELECT COUNT(*) as count FROM orders WHERE status = ? AND DATE(created_at) BETWEEN DATE(?) AND DATE(?)',
         [status.value, startOfDay, endOfDay],
       );
       counts[status] = result.first['count'] as int;

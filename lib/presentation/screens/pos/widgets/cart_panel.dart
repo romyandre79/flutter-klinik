@@ -11,10 +11,11 @@ import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
 import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
 import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
 import 'package:kreatif_klinik/data/models/customer.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
 import 'package:kreatif_klinik/data/models/order.dart'; 
 import 'package:kreatif_klinik/data/models/cart_item.dart';
 import 'package:kreatif_klinik/presentation/widgets/payment_dialog.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_customer_picker.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
 
 class CartPanel extends StatelessWidget {
   const CartPanel({super.key});
@@ -241,27 +242,18 @@ class CartPanel extends StatelessWidget {
                                         ],
                                       ],
                                     ),
-                                    // Unit Selector
+                                    // Unit Selection
                                     if (item.product.units.isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 4),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<ProductUnit>(
-                                            value: item.selectedUnit ?? item.product.baseUnit,
-                                            isDense: true,
-                                            style: AppTypography.labelSmall.copyWith(color: AppThemeColors.primary),
-                                            items: item.product.units.map((u) {
-                                              return DropdownMenuItem(
-                                                value: u,
-                                                child: Text(u.unitName),
-                                              );
-                                            }).toList(),
-                                            onChanged: (val) {
-                                              if (val != null) {
-                                                context.read<PosCubit>().updateUnit(item, val);
-                                              }
-                                            },
-                                          ),
+                                        child: SearchableUnitPicker(
+                                          label: 'Satuan',
+                                          selectedUnit: item.selectedUnit?.unitName ?? item.product.unit,
+                                          manualUnits: item.product.units.map((u) => u.unitName).toList(),
+                                          onUnitSelected: (unitName) {
+                                            final newUnit = item.product.units.firstWhere((u) => u.unitName == unitName);
+                                            context.read<PosCubit>().updateUnit(item, newUnit);
+                                          },
                                         ),
                                       ),
                                     // Discount Input Trigger
@@ -456,122 +448,21 @@ class CartPanel extends StatelessWidget {
   }
 }
 
-class _CustomerSelector extends StatefulWidget {
+class _CustomerSelector extends StatelessWidget {
   const _CustomerSelector();
 
-  @override
-  State<_CustomerSelector> createState() => _CustomerSelectorState();
-}
-
-class _CustomerSelectorState extends State<_CustomerSelector> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PosCubit, PosState>(
       builder: (context, state) {
         if (state is! PosLoaded) return const SizedBox.shrink();
 
-        final selectedCustomer = state.selectedCustomer;
-
-        if (selectedCustomer != null) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppThemeColors.primary.withValues(alpha: 0.05),
-              borderRadius: AppRadius.mdRadius,
-              border: Border.all(color: AppThemeColors.primary.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.person, color: AppThemeColors.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedCustomer.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (selectedCustomer.phone != null)
-                        Text(
-                          selectedCustomer.phone!,
-                          style: AppTypography.labelSmall.copyWith(color: AppThemeColors.textSecondary),
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: AppThemeColors.textSecondary),
-                  onPressed: () {
-                    context.read<PosCubit>().selectCustomer(null);
-                  },
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Autocomplete<Customer>(
-          displayStringForOption: (Customer option) => option.name,
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<Customer>.empty();
-            }
-            return context.read<CustomerRepository>().searchCustomers(textEditingValue.text);
+        return SearchableCustomerPicker(
+          selectedCustomer: state.selectedCustomer,
+          onCustomerSelected: (customer) {
+            context.read<PosCubit>().selectCustomer(customer);
           },
-          onSelected: (Customer selection) {
-            context.read<PosCubit>().selectCustomer(selection);
-          },
-          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-            return TextField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: 'Nama / No HP Pelanggan',
-                prefixIcon: const Icon(Icons.search),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: AppRadius.mdRadius,
-                  borderSide: const BorderSide(color: AppThemeColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: AppRadius.mdRadius,
-                  borderSide: const BorderSide(color: AppThemeColors.border),
-                ),
-              ),
-              onChanged: (value) {
-                context.read<PosCubit>().setCustomerName(value);
-              },
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4.0,
-                borderRadius: AppRadius.mdRadius,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300), 
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final Customer option = options.elementAt(index);
-                      return ListTile(
-                        title: Text(option.name),
-                        subtitle: option.phone != null ? Text(option.phone!) : null,
-                        onTap: () {
-                          onSelected(option);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
+          hint: 'Cari Pelanggan...',
         );
       },
     );

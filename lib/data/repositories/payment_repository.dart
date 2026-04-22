@@ -100,7 +100,7 @@ class PaymentRepository {
 
     final result = await db.query(
       'payments',
-      where: 'payment_date >= ? AND payment_date <= ?',
+      where: 'DATE(payment_date) BETWEEN DATE(?) AND DATE(?)',
       whereArgs: [startStr, endStr],
       orderBy: 'payment_date DESC',
     );
@@ -116,7 +116,7 @@ class PaymentRepository {
     final endStr = DateTime(end.year, end.month, end.day, 23, 59, 59).toIso8601String();
 
     final result = await db.rawQuery(
-      'SELECT SUM(amount - change) as total FROM payments WHERE payment_date >= ? AND payment_date <= ?',
+      'SELECT SUM(amount - change) as total FROM payments WHERE DATE(payment_date) BETWEEN DATE(?) AND DATE(?)',
       [startStr, endStr],
     );
 
@@ -142,7 +142,7 @@ class PaymentRepository {
     final revenue = <PaymentMethod, int>{};
     for (final method in PaymentMethod.values) {
       final result = await db.rawQuery(
-        'SELECT SUM(amount - change) as total FROM payments WHERE payment_method = ? AND payment_date >= ? AND payment_date <= ?',
+        'SELECT SUM(amount - change) as total FROM payments WHERE payment_method = ? AND DATE(payment_date) BETWEEN DATE(?) AND DATE(?)',
         [method.value, startStr, endStr],
       );
       revenue[method] = (result.first['total'] as int?) ?? 0;

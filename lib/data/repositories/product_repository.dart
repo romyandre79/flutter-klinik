@@ -83,8 +83,31 @@ class ProductRepository {
     final db = await _databaseHelper.database;
     return await db.transaction((txn) async {
       final id = await txn.insert('products', product.toMap());
+      
+      int? baseUnitId;
+      // First pass: Insert base unit (no parent)
       for (var unit in product.units) {
-        await txn.insert('product_units', unit.copyWith(productId: id).toMap());
+        if (unit.parentUnitId == null) {
+          baseUnitId = await txn.insert('product_units', unit.copyWith(productId: id).toMap());
+          break; 
+        }
+      }
+
+      // If no unit has parentUnitId == null, use first as base for safety
+      if (baseUnitId == null && product.units.isNotEmpty) {
+        baseUnitId = await txn.insert('product_units', product.units.first.copyWith(productId: id).toMap());
+      }
+
+      // Second pass: Insert other units with parentUnitId = baseUnitId
+      for (var unit in product.units) {
+        // Skip the one we already inserted if we can identify it, 
+        // but for safety we just skip the one with null parent if we used it as base.
+        if (unit.parentUnitId != null || (baseUnitId != null && unit.unitName != product.unit)) {
+          await txn.insert('product_units', unit.copyWith(
+            productId: id,
+            parentUnitId: baseUnitId,
+          ).toMap());
+        }
       }
       return id;
     });
@@ -117,17 +140,36 @@ class ProductRepository {
         }
       }
 
-      // Update or Insert units
+      // Identify base unit (parentUnitId == null)
+      int? baseUnitId;
       for (var unit in product.units) {
+        if (unit.unitName == product.unit) {
+          if (unit.id != null && existingIds.contains(unit.id)) {
+            await txn.update('product_units', unit.toMap(), where: 'id = ?', whereArgs: [unit.id]);
+            baseUnitId = unit.id;
+          } else {
+            baseUnitId = await txn.insert('product_units', unit.copyWith(productId: product.id).toMap());
+          }
+          break;
+        }
+      }
+
+      // Update or Insert other units
+      for (var unit in product.units) {
+        if (unit.unitName == product.unit) continue; // Already handled
+
         if (unit.id != null && existingIds.contains(unit.id)) {
           await txn.update(
             'product_units',
-            unit.toMap(),
+            unit.copyWith(parentUnitId: baseUnitId).toMap(),
             where: 'id = ?',
             whereArgs: [unit.id],
           );
         } else {
-          await txn.insert('product_units', unit.copyWith(productId: product.id).toMap());
+          await txn.insert('product_units', unit.copyWith(
+            productId: product.id,
+            parentUnitId: baseUnitId,
+          ).toMap());
         }
       }
       return rows;
@@ -166,6 +208,42 @@ class ProductRepository {
         await _deductStockRecursive(txn, productId, unitId, -quantityChange);
       }
     });
+  }
+
+  // Public wrapper for unit-aware stock updates using unit Name (case-insensitive)
+  Future<void> updateStockByUnitName(Transaction txn, int productId, String unitName, double quantityChange) async {
+    // Find the unit ID for this product and unit name (case-insensitive)
+    final List<Map<String, dynamic>> unitResults = await txn.query(
+      'product_units',
+      where: 'product_id = ? AND LOWER(unit_name) = LOWER(?)',
+      whereArgs: [productId, unitName.trim()],
+    );
+
+    if (unitResults.isNotEmpty) {
+      final unit = ProductUnit.fromMap(unitResults.first);
+      // Update specific unit stock
+      final currentStock = unit.stock;
+      await txn.update(
+        'product_units', 
+        {'stock': currentStock + quantityChange}, 
+        where: 'id = ?', 
+        whereArgs: [unit.id]
+      );
+      
+      // Sync products.stock (Total in Base Unit)
+      // Assumption: 1 additional unit = multiplier * base unit
+      final deltaBase = quantityChange * unit.multiplier;
+      await txn.rawUpdate(
+        'UPDATE products SET stock = COALESCE(stock, 0) + ?, updated_at = ? WHERE id = ?',
+        [deltaBase, DateTime.now().toIso8601String(), productId],
+      );
+    } else {
+      // Fallback: update products table if no specific unit record found
+      await txn.rawUpdate(
+        'UPDATE products SET stock = COALESCE(stock, 0) + ?, updated_at = ? WHERE id = ?',
+        [quantityChange, DateTime.now().toIso8601String(), productId],
+      );
+    }
   }
 
   // Recursive deduction with automatic conversion

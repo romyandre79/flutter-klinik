@@ -66,9 +66,14 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
       
       double effectiveMultiplier = 1.0;
       if (_toUnit!.parentUnitId == _fromUnit!.id) {
+        // From Parent to Child (e.g. BOX to PCS, if PCS points to BOX)
         effectiveMultiplier = _toUnit!.multiplier;
       } else if (_fromUnit!.parentUnitId == _toUnit!.id) {
-        effectiveMultiplier = 1 / _fromUnit!.multiplier;
+        // From Child to Parent (e.g. PACK to PCS, if PACK points to PCS)
+        effectiveMultiplier = _fromUnit!.multiplier;
+      } else if (_fromUnit!.parentUnitId != null && _fromUnit!.parentUnitId == _toUnit!.parentUnitId) {
+        // Siblings (e.g. PACK to BOX, both pointing to PCS)
+        effectiveMultiplier = _fromUnit!.multiplier / _toUnit!.multiplier;
       } else {
         // Complex conversion not supported in this simple UI for now
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,19 +118,45 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
         flexibleSpace: Container(decoration: const BoxDecoration(gradient: AppThemeColors.headerGradient)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Pilih Barang', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: AppSpacing.sm),
-            _buildProductSelector(),
-            if (_selectedProduct != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              _buildConversionForm(),
+      body: BlocListener<ProductCubit, ProductState>(
+        listener: (context, state) {
+          if (state is ProductLoaded && _selectedProduct != null) {
+            try {
+              // Refresh _selectedProduct and its units from the new state
+              final updatedProduct = state.products.firstWhere((p) => p.id == _selectedProduct!.id);
+              setState(() {
+                _selectedProduct = updatedProduct;
+                if (_fromUnit != null) {
+                  _fromUnit = updatedProduct.units.firstWhere((u) => u.unitName == _fromUnit!.unitName);
+                }
+                if (_toUnit != null) {
+                  _toUnit = updatedProduct.units.firstWhere((u) => u.unitName == _toUnit!.unitName);
+                }
+              });
+            } catch (_) {
+              // Product no longer exists, clear selection
+              setState(() {
+                _selectedProduct = null;
+                _fromUnit = null;
+                _toUnit = null;
+              });
+            }
+          }
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Pilih Barang', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: AppSpacing.sm),
+              _buildProductSelector(),
+              if (_selectedProduct != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _buildConversionForm(),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       bottomNavigationBar: _selectedProduct == null ? null : Padding(
@@ -150,10 +181,13 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
         if (state is ProductLoading) return const CircularProgressIndicator();
         if (state is ProductLoaded) {
           final goods = state.products.where((p) => p.isGoods).toList();
-          return DropdownButtonFormField<Product>(
-            value: _selectedProduct,
-            items: goods.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
-            onChanged: _onProductSelected,
+          return DropdownButtonFormField<int>(
+            value: _selectedProduct?.id,
+            items: goods.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
+            onChanged: (id) {
+              final product = goods.firstWhere((p) => p.id == id);
+              _onProductSelected(product);
+            },
             decoration: InputDecoration(
               border: OutlineInputBorder(borderRadius: AppRadius.mdRadius),
               prefixIcon: const Icon(Icons.inventory_2),
@@ -179,10 +213,10 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<ProductUnit>(
-                    value: _fromUnit,
-                    items: _selectedProduct!.units.map((u) => DropdownMenuItem(value: u, child: Text(u.unitName))).toList(),
-                    onChanged: (val) => setState(() => _fromUnit = val),
+                  child: DropdownButtonFormField<int>(
+                    value: _fromUnit?.id,
+                    items: _selectedProduct!.units.map((u) => DropdownMenuItem(value: u.id, child: Text(u.unitName))).toList(),
+                    onChanged: (val) => setState(() => _fromUnit = _selectedProduct!.units.firstWhere((u) => u.id == val)),
                     decoration: const InputDecoration(labelText: 'Dari Satuan'),
                   ),
                 ),
@@ -191,10 +225,10 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
                   child: Icon(Icons.arrow_forward, color: AppThemeColors.primary),
                 ),
                 Expanded(
-                  child: DropdownButtonFormField<ProductUnit>(
-                    value: _toUnit,
-                    items: _selectedProduct!.units.map((u) => DropdownMenuItem(value: u, child: Text(u.unitName))).toList(),
-                    onChanged: (val) => setState(() => _toUnit = val),
+                  child: DropdownButtonFormField<int>(
+                    value: _toUnit?.id,
+                    items: _selectedProduct!.units.map((u) => DropdownMenuItem(value: u.id, child: Text(u.unitName))).toList(),
+                    onChanged: (val) => setState(() => _toUnit = _selectedProduct!.units.firstWhere((u) => u.id == val)),
                     decoration: const InputDecoration(labelText: 'Ke Satuan'),
                   ),
                 ),
@@ -222,10 +256,10 @@ class _UnitConversionScreenState extends State<UnitConversionScreen> {
 
   Widget _buildMultiplierInfo() {
     String text = '';
-    if (_toUnit!.parentUnitId == _fromUnit!.id) {
-       text = '1 ${_fromUnit!.unitName} = ${_toUnit!.multiplier} ${_toUnit!.unitName}';
-    } else if (_fromUnit!.parentUnitId == _toUnit!.id) {
-       text = '1 ${_toUnit!.unitName} = ${_fromUnit!.multiplier} ${_fromUnit!.unitName}';
+    if (_fromUnit!.parentUnitId == _toUnit!.id) {
+       text = '1 ${_fromUnit!.unitName} = ${_fromUnit!.multiplier} ${_toUnit!.unitName}';
+    } else if (_toUnit!.parentUnitId == _fromUnit!.id) {
+       text = '1 ${_fromUnit!.unitName} = ${1 / _toUnit!.multiplier} ${_toUnit!.unitName}';
     } else {
        text = 'Hubungan satuan tidak langsung';
     }

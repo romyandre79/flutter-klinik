@@ -15,6 +15,7 @@ import 'package:kreatif_klinik/data/models/user.dart';
 import 'package:kreatif_klinik/data/models/unit.dart';
 import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
 import 'package:kreatif_klinik/logic/cubits/unit/unit_state.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
 import 'package:kreatif_klinik/data/models/product_unit.dart';
 
 
@@ -59,22 +60,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     if (product != null) {
       _selectedType = product.type;
       _selectedUnit = product.unit;
-      _units = List.from(product.units);
+      // Filter out the base unit from the _units list for display
+      _units = product.units.where((u) => u.unitName != product.unit).toList();
       if (product.imageUrl != null) {
         _imageFile = File(product.imageUrl!);
       }
     } else {
-      // Default base unit
-      _units = [
-        const ProductUnit(
-          productId: 0,
-          unitName: 'pcs',
-          price: 0,
-          cost: 0,
-          multiplier: 1,
-          stock: 0,
-        )
-      ];
+      // Default empty list for new items (Base fields are separate)
+      _units = [];
     }
   }
 
@@ -98,7 +91,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'heic'],
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'heic', 'webp'],
       );
 
       if (result != null && result.files.single.path != null) {
@@ -122,8 +115,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   Future<File> _processImage(File file) async {
     final ext = path.extension(file.path).toLowerCase();
     
-    // Check if HEIC/HEIF
-    if (ext == '.heic' || ext == '.heif') {
+    // Check if HEIC/HEIF or WebP
+    if (ext == '.heic' || ext == '.heif' || ext == '.webp') {
       try {
         // Prepare target path
         final tempDir = await getTemporaryDirectory();
@@ -150,7 +143,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         return file;
         
       } catch (e) {
-        debugPrint('Error converting HEIC: $e');
+        debugPrint('Error converting image: $e');
         return file; // Return original if conversion fails
       }
     }
@@ -188,6 +181,20 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       final imagePath = await _saveImage();
       if (!mounted) return;
       
+      final baseUnit = ProductUnit(
+        productId: widget.product?.id ?? 0,
+        unitName: _selectedUnit,
+        price: price,
+        cost: cost,
+        multiplier: 1.0,
+        stock: _selectedType == ProductType.goods 
+            ? double.tryParse(_stockController.text) ?? 0.0 
+            : 0.0,
+      );
+
+      // Final unit list: Base Unit + Additional Units
+      final List<ProductUnit> finalUnits = [baseUnit, ..._units];
+      
       final product = Product(
         id: widget.product?.id,
         name: name,
@@ -205,7 +212,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             ? int.tryParse(_durationController.text) ?? 1 
             : null,
         imageUrl: imagePath ?? widget.product?.imageUrl,
-        units: _units,
+        units: finalUnits,
       );
 
       if (widget.product == null) {
@@ -252,13 +259,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         price: 0,
         multiplier: 1,
         stock: 0,
-        parentUnitId: _units.isNotEmpty ? _units.last.id : null, 
+        // All additional units convert to the base unit
+        parentUnitId: null, 
       ));
     });
   }
 
   void _removeUnit(int index) {
-    if (_units.length <= 1) return; // Must have at least one unit
     setState(() {
       _units.removeAt(index);
     });
@@ -416,50 +423,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Unit
-              BlocBuilder<UnitCubit, UnitState>(
-                builder: (context, state) {
-                   List<Unit> units = [];
-                   if (state is UnitLoaded) {
-                     units = state.units;
-                   } else if (state is UnitOperationSuccess) {
-                     units = state.units;
-                   }
-                   
-                   // Helper to check if current selected unit is valid
-                   final isValid = units.any((u) => u.name == _selectedUnit);
-                   
-                   return DropdownButtonFormField<String>(
-                    value: isValid ? _selectedUnit : null,
-                    items: units.map((unit) {
-                      return DropdownMenuItem(
-                        value: unit.name,
-                        child: Text(unit.name),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedUnit = val);
-                    },
-                    decoration: InputDecoration(
-                      labelText: 'Satuan',
-                      hintText: 'Pilih Satuan',
-                      prefixIcon: const Icon(Icons.straighten, color: AppThemeColors.primary),
-                      border: OutlineInputBorder(
-                        borderRadius: AppRadius.mdRadius,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: AppRadius.mdRadius,
-                        borderSide: BorderSide(color: AppThemeColors.border),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Satuan tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  );
-                },
+              // Unit Selection via Searchable Picker
+              SearchableUnitPicker(
+                label: 'Satuan',
+                selectedUnit: _selectedUnit,
+                onUnitSelected: (val) => setState(() => _selectedUnit = val),
+                validator: (val) => val == null || val.isEmpty ? 'Pilih satuan' : null,
               ),
               const SizedBox(height: AppSpacing.lg),
 
@@ -548,7 +517,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Stok tidak boleh kosong';
                     }
-                    if (int.tryParse(value) == null) {
+                    if (double.tryParse(value) == null) {
                       return 'Harus berupa angka';
                     }
                     return null;
@@ -579,7 +548,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
                   itemBuilder: (context, index) {
                     final unit = _units[index];
-                    bool isBase = index == 0;
                     return Card(
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -598,11 +566,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                                   unit.unitName.toUpperCase(),
                                   style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
                                 ),
-                                if (!isBase)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                    onPressed: () => _removeUnit(index),
-                                  ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => _removeUnit(index),
+                                ),
                               ],
                             ),
                             const SizedBox(height: AppSpacing.sm),
@@ -613,7 +580,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                                   child: TextFormField(
                                     initialValue: unit.price.toString(),
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'Harga Jual', prefixText: 'Rp '),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Harga Jual', 
+                                      prefixText: 'Rp ',
+                                      border: OutlineInputBorder(),
+                                    ),
                                     onChanged: (val) {
                                       _units[index] = _units[index].copyWith(price: int.tryParse(val) ?? 0);
                                     },
@@ -625,7 +596,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                                   child: TextFormField(
                                     initialValue: unit.stock.toString(),
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'Stok Phisik'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Stok Phisik',
+                                      border: OutlineInputBorder(),
+                                    ),
                                     onChanged: (val) {
                                       _units[index] = _units[index].copyWith(stock: double.tryParse(val) ?? 0.0);
                                     },
@@ -633,26 +607,27 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                                 ),
                               ],
                             ),
-                            if (!isBase) ...[
-                              const SizedBox(height: AppSpacing.md),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      initialValue: unit.multiplier.toString(),
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        labelText: 'Isi per ${_units[index-1].unitName}',
-                                        suffixText: unit.unitName,
-                                      ),
-                                      onChanged: (val) {
-                                        _units[index] = _units[index].copyWith(multiplier: double.tryParse(val) ?? 1.0);
-                                      },
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: unit.multiplier.toString(),
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText: 'Standard Konversi',
+                                      helperText: '1 ${unit.unitName} = ... ${_selectedUnit}',
+                                      prefixText: '1 ${unit.unitName} = ',
+                                      suffixText: _selectedUnit,
+                                      border: const OutlineInputBorder(),
                                     ),
+                                    onChanged: (val) {
+                                      _units[index] = _units[index].copyWith(multiplier: double.tryParse(val) ?? 1.0);
+                                    },
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),

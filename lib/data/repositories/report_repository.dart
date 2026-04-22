@@ -26,7 +26,7 @@ class ReportRepository {
 
     final result = await db.query(
       'orders',
-      where: 'order_date BETWEEN ? AND ?',
+      where: 'DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
       whereArgs: [start.toIso8601String(), end.toIso8601String()],
       orderBy: 'order_date DESC',
     );
@@ -50,7 +50,7 @@ class ReportRepository {
         COUNT(*) as total_orders,
         SUM(total_price) as total_revenue
       FROM orders
-      WHERE order_date BETWEEN ? AND ?
+      WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)
     ''', [start.toIso8601String(), end.toIso8601String()]);
 
     final summary = summaryResult.first;
@@ -62,7 +62,7 @@ class ReportRepository {
       SELECT
         SUM(amount - COALESCE(change, 0)) as total_paid
       FROM payments
-      WHERE payment_date BETWEEN ? AND ?
+      WHERE DATE(payment_date) BETWEEN DATE(?) AND DATE(?)
     ''', [start.toIso8601String(), end.toIso8601String()]);
 
     final totalPaid = (paidResult.first['total_paid'] as int?) ?? 0;
@@ -71,7 +71,7 @@ class ReportRepository {
     final statusResult = await db.rawQuery('''
       SELECT status, COUNT(*) as count
       FROM orders
-      WHERE order_date BETWEEN ? AND ?
+      WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)
       GROUP BY status
     ''', [start.toIso8601String(), end.toIso8601String()]);
 
@@ -98,7 +98,7 @@ class ReportRepository {
         SUM(total_price) as revenue,
         COUNT(*) as order_count
       FROM orders
-      WHERE order_date BETWEEN ? AND ?
+      WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)
       GROUP BY DATE(order_date)
       ORDER BY date ASC
     ''', [start.toIso8601String(), end.toIso8601String()]);
@@ -109,7 +109,7 @@ class ReportRepository {
         DATE(payment_date) as date,
         SUM(amount - COALESCE(change, 0)) as paid
       FROM payments
-      WHERE payment_date BETWEEN ? AND ?
+      WHERE DATE(payment_date) BETWEEN DATE(?) AND DATE(?)
       GROUP BY DATE(payment_date)
     ''', [start.toIso8601String(), end.toIso8601String()]);
 
@@ -117,7 +117,7 @@ class ReportRepository {
     final purchaseResult = await db.rawQuery('''
       SELECT SUM(total_amount) as total_purchases
       FROM purchase_orders
-      WHERE order_date BETWEEN ? AND ? AND status != 'cancelled'
+      WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?) AND status != 'cancelled'
     ''', [start.toIso8601String(), end.toIso8601String()]);
     
     final totalPurchases = (purchaseResult.first['total_purchases'] as int?) ?? 0;
@@ -128,7 +128,7 @@ class ReportRepository {
         DATE(order_date) as date,
         SUM(total_amount) as purchases
       FROM purchase_orders
-      WHERE order_date BETWEEN ? AND ? AND status != 'cancelled'
+      WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?) AND status != 'cancelled'
       GROUP BY DATE(order_date)
     ''', [start.toIso8601String(), end.toIso8601String()]);
 
@@ -204,7 +204,7 @@ class ReportRepository {
         COUNT(DISTINCT oi.order_id) as order_count
       FROM order_items oi
       JOIN orders o ON o.id = oi.order_id
-      WHERE o.order_date BETWEEN ? AND ?
+      WHERE DATE(o.order_date) BETWEEN DATE(?) AND DATE(?)
       GROUP BY oi.service_name
       ORDER BY total_revenue DESC
       LIMIT 10
@@ -248,7 +248,7 @@ class ReportRepository {
     // Get orders
     final orderMaps = await db.query(
       'orders',
-      where: 'order_date BETWEEN ? AND ?',
+      where: 'DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
       whereArgs: [start.toIso8601String(), end.toIso8601String()],
       orderBy: 'order_date DESC',
     );
@@ -284,7 +284,7 @@ class ReportRepository {
     // Get purchases
     final purchaseMaps = await db.query(
       'purchase_orders',
-      where: 'order_date BETWEEN ? AND ? AND status != ?',
+      where: 'DATE(order_date) BETWEEN DATE(?) AND DATE(?) AND status != ?',
       whereArgs: [start.toIso8601String(), end.toIso8601String(), 'cancelled'],
       orderBy: 'order_date DESC',
     );

@@ -1,17 +1,22 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/core/utils/currency_formatter.dart';
-import 'package:flutter_pos_offline/data/models/order_item.dart';
-import 'package:flutter_pos_offline/data/models/payment.dart';
-import 'package:flutter_pos_offline/logic/cubits/order/order_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/order/order_state.dart';
-import 'package:flutter_pos_offline/logic/cubits/pos/pos_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/pos/pos_state.dart';
-import 'package:flutter_pos_offline/data/models/customer.dart';
-import 'package:flutter_pos_offline/data/repositories/customer_repository.dart';
-import 'package:flutter_pos_offline/data/models/order.dart'; // Add OrderStatus import
-import 'package:flutter_pos_offline/presentation/widgets/payment_dialog.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/product_unit.dart';
+
+import 'package:kreatif_klinik/data/models/payment.dart';
+import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
+import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
+import 'package:kreatif_klinik/data/models/order.dart'; 
+import 'package:kreatif_klinik/data/models/cart_item.dart';
+import 'package:kreatif_klinik/presentation/widgets/payment_dialog.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_customer_picker.dart';
+import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
 
 class CartPanel extends StatelessWidget {
   const CartPanel({super.key});
@@ -37,11 +42,14 @@ class CartPanel extends StatelessWidget {
 
       if (item.product.isGoods) {
         final currentStock = item.product.stock ?? 0;
-        if (item.quantity > currentStock) {
+        // Convert sold quantity to base unit before comparing with products.stock
+        final multiplier = item.selectedUnit?.multiplier ?? 1.0;
+        final quantityInBaseUnit = item.quantity * multiplier;
+        if (quantityInBaseUnit > currentStock) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(0)})'),
+                  'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(2)})'),
               backgroundColor: AppThemeColors.error,
             ),
           );
@@ -81,10 +89,12 @@ class CartPanel extends StatelessWidget {
       return OrderItem(
         orderId: 0, // Placeholder
         productId: item.product.id,
-        serviceName: item.product.name, // Using serviceName for product name compatibility
+        unitId: item.selectedUnit?.id,
+        serviceName: item.product.name,
         quantity: item.quantity.toDouble(),
-        unit: item.product.unit,
-        pricePerUnit: item.product.price,
+        unit: item.selectedUnit?.unitName ?? item.product.unit,
+        pricePerUnit: item.selectedUnit?.price ?? item.product.price,
+        discount: item.discount,
         subtotal: item.subtotal,
       );
     }).toList();
@@ -98,6 +108,7 @@ class CartPanel extends StatelessWidget {
       initialPayment: paidAmount,
       paymentMethod: paymentMethod,
       status: status,
+      totalDiscount: posState.orderDiscount,
       createdBy: 1, // TODO: Get from AuthCubit
     );
   }
@@ -107,7 +118,10 @@ class CartPanel extends StatelessWidget {
     return BlocListener<OrderCubit, OrderState>(
       listener: (context, state) {
         if (state is OrderCreated) {
-          context.read<PosCubit>().clearCart();
+          // Clear cart then reload products so stock reflects the completed sale
+          context.read<PosCubit>()
+            ..clearCart()
+            ..loadProducts();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Penjualan ${state.order.invoiceNo} berhasil dibuat'),
@@ -200,7 +214,7 @@ class CartPanel extends StatelessWidget {
                               Column(
                                 children: [
                                   InkWell(
-                                    onTap: () => context.read<PosCubit>().addToCart(item.product),
+                                    onTap: () => context.read<PosCubit>().addToCart(item.product, unit: item.selectedUnit),
                                     child: const Icon(Icons.add_circle, color: AppThemeColors.primary, size: 20),
                                   ),
                                   Padding(
@@ -214,22 +228,78 @@ class CartPanel extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(width: AppSpacing.md),
+                              // Thumbnail
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppThemeColors.primarySurface.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(AppSpacing.xs),
+                                  image: item.product.imageUrl != null && File(item.product.imageUrl!).existsSync()
+                                      ? DecorationImage(
+                                          image: FileImage(File(item.product.imageUrl!)),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: item.product.imageUrl != null && File(item.product.imageUrl!).existsSync()
+                                    ? null
+                                    : Center(
+                                        child: Text(
+                                          item.product.name.isNotEmpty ? item.product.name[0].toUpperCase() : '?',
+                                          style: AppTypography.labelLarge.copyWith(
+                                            color: AppThemeColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
                               // Details
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(item.product.name, style: AppTypography.bodyMedium),
-                                    Text(
-                                      '@ ${CurrencyFormatter.format(item.product.price)}',
-                                      style: AppTypography.bodySmall,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          CurrencyFormatter.format(item.effectivePrice),
+                                          style: AppTypography.bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                    // Unit Selection
+                                    if (item.product.units.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: SearchableUnitPicker(
+                                          label: 'Satuan',
+                                          selectedUnit: item.selectedUnit?.unitName ?? item.product.unit,
+                                          manualUnits: item.product.units.map((u) => u.unitName).toList(),
+                                          onUnitSelected: (unitName) {
+                                            final newUnit = item.product.units.firstWhere((u) => u.unitName == unitName);
+                                            context.read<PosCubit>().updateUnit(item, newUnit);
+                                          },
+                                        ),
+                                      ),
+                                    // Discount Input Trigger
+                                    InkWell(
+                                      onTap: () => _showItemDiscountDialog(context, item),
+                                      child: Text(
+                                        'Diskon: ${CurrencyFormatter.format(item.discount)}',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: AppThemeColors.primary,
+                                          height: 1.5,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              // Subtotal
+                              // Gross Total
                               Text(
-                                CurrencyFormatter.format(item.subtotal),
+                                CurrencyFormatter.format(item.grossTotal),
                                 style: AppTypography.labelLarge,
                               ),
                             ],
@@ -246,9 +316,14 @@ class CartPanel extends StatelessWidget {
             // Footer (Total & Checkout)
             BlocBuilder<PosCubit, PosState>(
               builder: (context, state) {
-                int total = 0;
+                int grossTotal = 0;
+                int totalDiscount = 0;
+                int grandTotal = 0;
+                
                 if (state is PosLoaded) {
-                   total = state.totalAmount;
+                   grossTotal = state.totalAmount;
+                   totalDiscount = state.totalDiscount;
+                   grandTotal = state.grandTotal;
                 }
 
                 return Container(
@@ -259,13 +334,28 @@ class CartPanel extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
+                      _buildSummaryRow('Total Nilai', grossTotal),
+                      _buildSummaryRow(
+                        'Diskon Tambahan', 
+                        state is PosLoaded ? state.orderDiscount : 0,
+                        isClickable: true,
+                        onTap: () => _showOrderDiscountDialog(context, state as PosLoaded),
+                      ),
+                      _buildSummaryRow('Total Diskon', totalDiscount, color: AppThemeColors.error),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Divider(height: 1),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Total', style: AppTypography.titleMedium),
+                          Text('Total Bayar', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
                           Text(
-                            CurrencyFormatter.format(total),
-                            style: AppTypography.titleLarge.copyWith(color: AppThemeColors.primary),
+                            CurrencyFormatter.format(grandTotal),
+                            style: AppTypography.titleLarge.copyWith(
+                              color: AppThemeColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -276,11 +366,11 @@ class CartPanel extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                           ),
-                          onPressed: total > 0 
-                            ? () => _handleCharge(context, total)
+                          onPressed: grandTotal > 0 
+                            ? () => _handleCharge(context, grandTotal)
                             : null,
                           child: Text(
-                             total > 0 ? 'Bayar ${CurrencyFormatter.format(total)}' : 'Bayar',
+                             grandTotal > 0 ? 'Bayar ${CurrencyFormatter.format(grandTotal)}' : 'Bayar',
                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -295,124 +385,111 @@ class CartPanel extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildSummaryRow(String label, int value, {Color? color, bool isClickable = false, VoidCallback? onTap}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label, 
+              style: AppTypography.bodySmall.copyWith(
+                color: isClickable ? AppThemeColors.primary : AppThemeColors.textSecondary,
+                decoration: isClickable ? TextDecoration.underline : null,
+              )
+            ),
+            Text(
+              CurrencyFormatter.format(value),
+              style: AppTypography.bodySmall.copyWith(
+                color: color ?? AppThemeColors.textPrimary,
+                fontWeight: color != null ? FontWeight.bold : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showItemDiscountDialog(BuildContext context, CartItem item) {
+    final controller = TextEditingController(text: item.discount.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Diskon ${item.product.name} (Rp)'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Masukkan nilai Rupiah',
+            prefixText: 'Rp ',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text) ?? 0;
+              context.read<PosCubit>().updateItemDiscount(item, val);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOrderDiscountDialog(BuildContext context, PosLoaded state) {
+    final controller = TextEditingController(text: state.orderDiscount.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Diskon Tambahan Pesanan (Rp)'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Masukkan nilai Rupiah',
+            prefixText: 'Rp ',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text) ?? 0;
+              context.read<PosCubit>().updateOrderDiscount(val);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _CustomerSelector extends StatefulWidget {
+class _CustomerSelector extends StatelessWidget {
   const _CustomerSelector();
 
-  @override
-  State<_CustomerSelector> createState() => _CustomerSelectorState();
-}
-
-class _CustomerSelectorState extends State<_CustomerSelector> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PosCubit, PosState>(
       builder: (context, state) {
         if (state is! PosLoaded) return const SizedBox.shrink();
 
-        final selectedCustomer = state.selectedCustomer;
-
-        if (selectedCustomer != null) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppThemeColors.primary.withValues(alpha: 0.05),
-              borderRadius: AppRadius.mdRadius,
-              border: Border.all(color: AppThemeColors.primary.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.person, color: AppThemeColors.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedCustomer.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (selectedCustomer.phone != null)
-                        Text(
-                          selectedCustomer.phone!,
-                          style: AppTypography.labelSmall.copyWith(color: AppThemeColors.textSecondary),
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: AppThemeColors.textSecondary),
-                  onPressed: () {
-                    context.read<PosCubit>().selectCustomer(null);
-                  },
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Autocomplete<Customer>(
-          displayStringForOption: (Customer option) => option.name,
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<Customer>.empty();
-            }
-            return context.read<CustomerRepository>().searchCustomers(textEditingValue.text);
+        return SearchableCustomerPicker(
+          selectedCustomer: state.selectedCustomer,
+          onCustomerSelected: (customer) {
+            context.read<PosCubit>().selectCustomer(customer);
           },
-          onSelected: (Customer selection) {
-            context.read<PosCubit>().selectCustomer(selection);
-          },
-          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-            return TextField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: 'Nama / No HP Pelanggan',
-                prefixIcon: const Icon(Icons.search),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: AppRadius.mdRadius,
-                  borderSide: const BorderSide(color: AppThemeColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: AppRadius.mdRadius,
-                  borderSide: const BorderSide(color: AppThemeColors.border),
-                ),
-              ),
-              onChanged: (value) {
-                context.read<PosCubit>().setCustomerName(value);
-              },
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4.0,
-                borderRadius: AppRadius.mdRadius,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300), 
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final Customer option = options.elementAt(index);
-                      return ListTile(
-                        title: Text(option.name),
-                        subtitle: option.phone != null ? Text(option.phone!) : null,
-                        onTap: () {
-                          onSelected(option);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
+          hint: 'Cari Pelanggan...',
         );
       },
     );

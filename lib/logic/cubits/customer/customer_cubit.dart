@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/core/services/import_service.dart';
-import 'package:flutter_pos_offline/data/models/customer.dart';
-import 'package:flutter_pos_offline/data/repositories/customer_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/customer/customer_state.dart';
+import 'package:kreatif_klinik/core/services/import_service.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
+import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/customer/customer_state.dart';
 
 class CustomerCubit extends Cubit<CustomerState> {
   final CustomerRepository _customerRepository;

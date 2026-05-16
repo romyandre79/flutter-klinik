@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/data/repositories/report_repository.dart';
-import 'package:flutter_pos_offline/core/services/export_service.dart';
-import 'package:flutter_pos_offline/logic/cubits/report/report_state.dart';
+import 'package:kreatif_klinik/data/repositories/report_repository.dart';
+import 'package:kreatif_klinik/core/services/export_service.dart';
+import 'package:kreatif_klinik/logic/cubits/report/report_state.dart';
 
 class ReportCubit extends Cubit<ReportState> {
   final ReportRepository _reportRepository;

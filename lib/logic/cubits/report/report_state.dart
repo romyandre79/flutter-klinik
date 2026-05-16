@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_pos_offline/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
 
 class ReportData {
   final DateTime startDate;

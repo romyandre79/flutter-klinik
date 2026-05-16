@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/core/utils/currency_formatter.dart';
-import 'package:flutter_pos_offline/core/utils/date_formatter.dart';
-import 'package:flutter_pos_offline/data/models/purchase_order.dart';
-import 'package:flutter_pos_offline/data/models/user.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_state.dart';
-import 'package:flutter_pos_offline/logic/cubits/purchase_order/purchase_order_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/purchase_order/purchase_order_state.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/data/models/purchase_order.dart';
+import 'package:kreatif_klinik/data/models/user.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_state.dart';
 
 class PurchaseOrderDetailScreen extends StatelessWidget {
   final PurchaseOrder order;
@@ -31,6 +32,9 @@ class PurchaseOrderDetailScreen extends StatelessWidget {
       body: BlocListener<PurchaseOrderCubit, PurchaseOrderState>(
         listener: (context, state) {
           if (state is PoOperationSuccess) {
+            // Refresh product stock after PO is received/deleted
+            context.read<ProductCubit>().loadProducts();
+            
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.green),
             );

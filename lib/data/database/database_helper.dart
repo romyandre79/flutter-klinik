@@ -2,13 +2,13 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_pos_offline/core/constants/app_constants.dart';
-import 'package:flutter_pos_offline/core/utils/password_helper.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/core/utils/password_helper.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int _currentVersion = 10;
+  static const int _currentVersion = 11;
 
   DatabaseHelper._init();
 
@@ -20,7 +20,9 @@ class DatabaseHelper {
 
   Future<String> getDbPath() async {
     final String dbPath;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (Platform.isWindows) {
+      dbPath = dirname(Platform.resolvedExecutable);
+    } else if (Platform.isLinux || Platform.isMacOS) {
       final docsDir = await getApplicationDocumentsDirectory();
       dbPath = docsDir.path;
     } else {
@@ -77,6 +79,8 @@ class DatabaseHelper {
         total_orders INTEGER DEFAULT 0,
         total_spent INTEGER DEFAULT 0,
         last_order_date TEXT,
+        default_discount REAL DEFAULT 0,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -112,6 +116,7 @@ class DatabaseHelper {
         image_url TEXT,
         barcode TEXT,
         is_active INTEGER DEFAULT 1,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -131,9 +136,12 @@ class DatabaseHelper {
         total_items INTEGER DEFAULT 0,
         total_weight REAL DEFAULT 0,
         total_price INTEGER NOT NULL,
+        total_discount INTEGER DEFAULT 0,
         paid INTEGER DEFAULT 0,
         notes TEXT,
         created_by INTEGER,
+        is_synced INTEGER DEFAULT 0,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
@@ -151,8 +159,10 @@ class DatabaseHelper {
         quantity REAL NOT NULL,
         unit TEXT NOT NULL,
         price_per_unit INTEGER NOT NULL,
+        discount INTEGER DEFAULT 0,
         subtotal INTEGER NOT NULL,
         product_id INTEGER,
+        unit_id INTEGER,
         FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
         FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL,
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
@@ -204,6 +214,7 @@ class DatabaseHelper {
         address TEXT,
         phone TEXT,
         email TEXT,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -219,6 +230,8 @@ class DatabaseHelper {
         status TEXT NOT NULL, -- pending, received, cancelled
         total_amount INTEGER DEFAULT 0,
         notes TEXT,
+        is_synced INTEGER DEFAULT 0,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE
@@ -247,6 +260,7 @@ class DatabaseHelper {
       CREATE TABLE units (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
+        server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -265,6 +279,38 @@ class DatabaseHelper {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (source_product_id) REFERENCES products(id) ON DELETE CASCADE,
         FOREIGN KEY (target_product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create Product Units table
+    await db.execute('''
+      CREATE TABLE product_units (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        unit_name TEXT NOT NULL,
+        price INTEGER NOT NULL,
+        cost INTEGER DEFAULT 0,
+        parent_unit_id INTEGER,
+        multiplier REAL DEFAULT 1.0,
+        stock REAL DEFAULT 0.0,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_unit_id) REFERENCES product_units(id) ON DELETE SET NULL
+      )
+    ''');
+
+    // Create Unit Conversions table (log)
+    await db.execute('''
+      CREATE TABLE unit_conversions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        from_unit_id INTEGER NOT NULL,
+        to_unit_id INTEGER NOT NULL,
+        qty_changed REAL NOT NULL,
+        type TEXT NOT NULL, -- manual, auto
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (from_unit_id) REFERENCES product_units(id) ON DELETE CASCADE,
+        FOREIGN KEY (to_unit_id) REFERENCES product_units(id) ON DELETE CASCADE
       )
     ''');
 
@@ -305,6 +351,10 @@ class DatabaseHelper {
     // Stock Transfers indexes
     await db.execute('CREATE INDEX idx_stock_transfers_source ON stock_transfers(source_product_id)');
     await db.execute('CREATE INDEX idx_stock_transfers_target ON stock_transfers(target_product_id)');
+
+    // Product Units indexes
+    await db.execute('CREATE INDEX idx_product_units_product ON product_units(product_id)');
+    await db.execute('CREATE INDEX idx_product_units_parent ON product_units(parent_unit_id)');
   }
 
   Future<void> _seedData(Database db) async {
@@ -672,6 +722,82 @@ class DatabaseHelper {
       await db.execute('CREATE INDEX IF NOT EXISTS idx_stock_transfers_source ON stock_transfers(source_product_id)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_stock_transfers_target ON stock_transfers(target_product_id)');
     }
+
+    if (oldVersion < 11) {
+      // Add default_discount to customers
+      await db.execute('ALTER TABLE customers ADD COLUMN default_discount REAL DEFAULT 0');
+      // Add total_discount to orders
+      await db.execute('ALTER TABLE orders ADD COLUMN total_discount INTEGER DEFAULT 0');
+      // Add discount to order_items
+      await db.execute('ALTER TABLE order_items ADD COLUMN discount INTEGER DEFAULT 0');
+    }
+
+    if (oldVersion < 11) {
+      // Create Product Units table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS product_units (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          product_id INTEGER NOT NULL,
+          unit_name TEXT NOT NULL,
+          price INTEGER NOT NULL,
+          cost INTEGER DEFAULT 0,
+          parent_unit_id INTEGER,
+          multiplier REAL DEFAULT 1.0,
+          stock REAL DEFAULT 0.0,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+          FOREIGN KEY (parent_unit_id) REFERENCES product_units(id) ON DELETE SET NULL
+        )
+      ''');
+
+      // Create Unit Conversions table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS unit_conversions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          product_id INTEGER NOT NULL,
+          from_unit_id INTEGER NOT NULL,
+          to_unit_id INTEGER NOT NULL,
+          qty_changed REAL NOT NULL,
+          type TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+          FOREIGN KEY (from_unit_id) REFERENCES product_units(id) ON DELETE CASCADE,
+          FOREIGN KEY (to_unit_id) REFERENCES product_units(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create indexes
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_product_units_product ON product_units(product_id)');
+      
+      // Migrate existing products to product_units (as base units)
+      final List<Map<String, dynamic>> products = await db.query('products');
+      for (var product in products) {
+        await db.insert('product_units', {
+          'product_id': product['id'],
+          'unit_name': product['unit'],
+          'price': product['price'],
+          'cost': product['cost'] ?? 0,
+          'parent_unit_id': null,
+          'multiplier': 1.0,
+          'stock': product['stock'] ?? 0.0,
+        });
+      }
+
+      // Add unit_id to order_items
+      await db.execute('ALTER TABLE order_items ADD COLUMN unit_id INTEGER');
+    }
+
+    if (oldVersion < 12) {
+      // Add sync columns to multiple tables
+      await db.execute('ALTER TABLE orders ADD COLUMN is_synced INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE orders ADD COLUMN server_id INTEGER');
+      
+      await db.execute('ALTER TABLE products ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE customers ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE suppliers ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE units ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN server_id INTEGER');
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN is_synced INTEGER DEFAULT 0');
+    }
   }
 
 
@@ -683,14 +809,7 @@ class DatabaseHelper {
   }
 
   Future<void> deleteDatabase() async {
-    final String dbPath;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      final docsDir = await getApplicationDocumentsDirectory();
-      dbPath = docsDir.path;
-    } else {
-      dbPath = await getDatabasesPath();
-    }
-    final path = join(dbPath, AppConstants.databaseName);
+    final path = await getDbPath();
     
     // Close existing connection if any
     if (_database != null) {

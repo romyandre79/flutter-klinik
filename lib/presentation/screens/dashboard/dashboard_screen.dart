@@ -1,32 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/core/utils/currency_formatter.dart';
-import 'package:flutter_pos_offline/core/utils/date_formatter.dart';
-import 'package:flutter_pos_offline/data/models/order.dart';
-import 'package:flutter_pos_offline/data/models/user.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_state.dart';
-import 'package:flutter_pos_offline/logic/cubits/dashboard/dashboard_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/dashboard/dashboard_state.dart';
-import 'package:flutter_pos_offline/logic/cubits/order/order_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/printer/printer_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/orders/order_detail_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/orders/order_list_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/settings/printer_settings_screen.dart';
-import 'package:flutter_pos_offline/presentation/widgets/order_card.dart';
-import 'package:flutter_pos_offline/data/repositories/product_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/pos/pos_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/purchase_order/purchase_order_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/purchasing/purchase_order_list_screen.dart';
-import 'package:flutter_pos_offline/data/repositories/purchase_order_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:flutter_pos_offline/data/repositories/supplier_repository.dart';
-import 'package:flutter_pos_offline/presentation/screens/pos/pos_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/pengumuman/pengumuman_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/reminder/reminder_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/inventory/stock_transfer_screen.dart';
-import 'package:flutter_pos_offline/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/user.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_klinik/logic/cubits/dashboard/dashboard_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/dashboard/dashboard_state.dart';
+import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/printer/printer_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/orders/order_detail_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/orders/order_list_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/settings/printer_settings_screen.dart';
+import 'package:kreatif_klinik/presentation/widgets/order_card.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/purchasing/purchase_order_list_screen.dart';
+import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
+import 'package:kreatif_klinik/presentation/screens/pos/pos_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/pengumuman/pengumuman_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/reminder/reminder_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/inventory/stock_transfer_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/inventory/unit_conversion_screen.dart';
+import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int index)? onSwitchTab;
@@ -488,13 +489,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(
               child: _buildQuickActionItem(
                 icon: Icons.swap_horiz,
-                label: 'Transfer Stok',
+                label: 'Transfer',
                 color: Colors.teal,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => const StockTransferScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _buildQuickActionItem(
+                icon: Icons.unfold_more,
+                label: 'Konversi',
+                color: Colors.indigo,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const UnitConversionScreen(),
                     ),
                   );
                 },

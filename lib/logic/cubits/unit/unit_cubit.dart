@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_pos_offline/data/models/unit.dart';
-import 'package:flutter_pos_offline/data/repositories/unit_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/unit/unit_state.dart';
+import 'package:kreatif_klinik/data/models/unit.dart';
+import 'package:kreatif_klinik/data/repositories/unit_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/unit/unit_state.dart';
 
 class UnitCubit extends Cubit<UnitState> {
   final UnitRepository _repository;

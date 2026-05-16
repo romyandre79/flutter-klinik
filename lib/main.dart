@@ -4,31 +4,38 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/core/utils/date_formatter.dart';
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_state.dart';
-import 'package:flutter_pos_offline/presentation/screens/auth/login_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/main_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/onboarding/onboarding_screen.dart';
-import 'package:flutter_pos_offline/data/repositories/auth_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/customer_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/order_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/report_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/service_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/user_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/supplier_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/purchase_order_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/product_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/payment_repository.dart'; // Add import
-import 'package:flutter_pos_offline/logic/cubits/order/order_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/product/product_cubit.dart';
-import 'package:flutter_pos_offline/core/services/notification_service.dart';
-import 'package:flutter_pos_offline/data/repositories/pengumuman_template_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/stock_transfer_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/pengumuman/pengumuman_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/stock_transfer/stock_transfer_cubit.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_klinik/presentation/screens/auth/login_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/main_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/onboarding/onboarding_screen.dart';
+import 'package:kreatif_klinik/data/repositories/auth_repository.dart';
+import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
+import 'package:kreatif_klinik/data/repositories/order_repository.dart';
+import 'package:kreatif_klinik/data/repositories/report_repository.dart';
+import 'package:kreatif_klinik/data/repositories/service_repository.dart';
+import 'package:kreatif_klinik/data/repositories/user_repository.dart';
+import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
+import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/data/repositories/unit_repository.dart';
+import 'package:kreatif_klinik/data/repositories/payment_repository.dart'; // Add import
+import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_klinik/core/services/notification_service.dart';
+import 'package:kreatif_klinik/data/repositories/pengumuman_template_repository.dart';
+import 'package:kreatif_klinik/data/repositories/stock_transfer_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/stock_transfer/stock_transfer_cubit.dart';
+import 'package:kreatif_klinik/core/services/sync_service.dart';
+import 'package:kreatif_klinik/logic/sync/sync_cubit.dart';
+import 'package:kreatif_klinik/core/api/api_service.dart';
+import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,6 +89,13 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => PaymentRepository()), // Add PaymentRepository
         RepositoryProvider(create: (_) => PengumumanTemplateRepository()),
         RepositoryProvider(create: (_) => StockTransferRepository()),
+        RepositoryProvider(create: (_) => UnitRepository()),
+        RepositoryProvider(
+          create: (context) => SyncService(
+            apiService: ApiService(),
+            dbHelper: DatabaseHelper.instance,
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -112,6 +126,26 @@ class MyApp extends StatelessWidget {
             create: (context) => ProductCubit(
               context.read<ProductRepository>(),
             )..loadProducts(),
+          ),
+          BlocProvider(
+            create: (context) => SyncCubit(
+              context.read<SyncService>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => UnitCubit(
+              context.read<UnitRepository>(),
+            )..loadUnits(),
+          ),
+          BlocProvider(
+            create: (context) => CustomerCubit(
+              customerRepository: context.read<CustomerRepository>(),
+            )..loadCustomers(),
+          ),
+          BlocProvider(
+            create: (context) => SupplierCubit(
+              supplierRepository: context.read<SupplierRepository>(),
+            )..loadSuppliers(),
           ),
         ],
         child: MaterialApp(

@@ -1,11 +1,11 @@
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/order.dart';
-import 'package:flutter_pos_offline/logic/cubits/report/report_state.dart';
-import 'package:flutter_pos_offline/data/models/order_item.dart';
-import 'package:flutter_pos_offline/data/models/purchase_order.dart';
-import 'package:flutter_pos_offline/data/models/purchase_order_item.dart';
-import 'package:flutter_pos_offline/data/models/supplier.dart';
-import 'package:flutter_pos_offline/data/models/product.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/logic/cubits/report/report_state.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/purchase_order.dart';
+import 'package:kreatif_klinik/data/models/purchase_order_item.dart';
+import 'package:kreatif_klinik/data/models/supplier.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
 
 class ReportRepository {
   final DatabaseHelper _databaseHelper;
@@ -21,13 +21,13 @@ class ReportRepository {
     final db = await _databaseHelper.database;
 
     // Set start to beginning of day and end to end of day
-    final start = DateTime(startDate.year, startDate.month, startDate.day);
-    final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final startStr = DateTime(startDate.year, startDate.month, startDate.day).toIso8601String();
+    final endStr = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999).toIso8601String();
 
     final result = await db.query(
       'orders',
-      where: 'order_date BETWEEN ? AND ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+      where: 'order_date >= ? AND order_date <= ?',
+      whereArgs: [startStr, endStr],
       orderBy: 'order_date DESC',
     );
 
@@ -41,8 +41,9 @@ class ReportRepository {
   ) async {
     final db = await _databaseHelper.database;
 
-    final start = DateTime(startDate.year, startDate.month, startDate.day);
-    final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    // Set start to beginning of day and end to end of day
+    final start = DateTime(startDate.year, startDate.month, startDate.day).toIso8601String();
+    final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999).toIso8601String();
 
     // Get total orders and revenue (based on order_date)
     final summaryResult = await db.rawQuery('''
@@ -50,8 +51,8 @@ class ReportRepository {
         COUNT(*) as total_orders,
         SUM(total_price) as total_revenue
       FROM orders
-      WHERE order_date BETWEEN ? AND ?
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+      WHERE order_date >= ? AND order_date <= ?
+    ''', [start, end]);
 
     final summary = summaryResult.first;
     final totalOrders = (summary['total_orders'] as int?) ?? 0;
@@ -62,8 +63,8 @@ class ReportRepository {
       SELECT
         SUM(amount - COALESCE(change, 0)) as total_paid
       FROM payments
-      WHERE payment_date BETWEEN ? AND ?
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+      WHERE payment_date >= ? AND payment_date <= ?
+    ''', [start, end]);
 
     final totalPaid = (paidResult.first['total_paid'] as int?) ?? 0;
 
@@ -71,9 +72,9 @@ class ReportRepository {
     final statusResult = await db.rawQuery('''
       SELECT status, COUNT(*) as count
       FROM orders
-      WHERE order_date BETWEEN ? AND ?
+      WHERE order_date >= ? AND order_date <= ?
       GROUP BY status
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start, end]);
 
     final ordersByStatus = <OrderStatus, int>{};
     int completedOrders = 0;
@@ -98,10 +99,10 @@ class ReportRepository {
         SUM(total_price) as revenue,
         COUNT(*) as order_count
       FROM orders
-      WHERE order_date BETWEEN ? AND ?
+      WHERE order_date >= ? AND order_date <= ?
       GROUP BY DATE(order_date)
       ORDER BY date ASC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start, end]);
 
     // Get daily payments (payments by payment_date)
     final dailyPaymentResult = await db.rawQuery('''
@@ -109,16 +110,16 @@ class ReportRepository {
         DATE(payment_date) as date,
         SUM(amount - COALESCE(change, 0)) as paid
       FROM payments
-      WHERE payment_date BETWEEN ? AND ?
+      WHERE payment_date >= ? AND payment_date <= ?
       GROUP BY DATE(payment_date)
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start, end]);
 
     // Get total purchases
     final purchaseResult = await db.rawQuery('''
       SELECT SUM(total_amount) as total_purchases
       FROM purchase_orders
-      WHERE order_date BETWEEN ? AND ? AND status != 'cancelled'
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+      WHERE order_date >= ? AND order_date <= ? AND status != 'cancelled'
+    ''', [start, end]);
     
     final totalPurchases = (purchaseResult.first['total_purchases'] as int?) ?? 0;
 
@@ -128,9 +129,9 @@ class ReportRepository {
         DATE(order_date) as date,
         SUM(total_amount) as purchases
       FROM purchase_orders
-      WHERE order_date BETWEEN ? AND ? AND status != 'cancelled'
+      WHERE order_date >= ? AND order_date <= ? AND status != 'cancelled'
       GROUP BY DATE(order_date)
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start, end]);
 
     // Create maps for quick lookup
     final dailyPayments = <String, int>{};
@@ -204,11 +205,11 @@ class ReportRepository {
         COUNT(DISTINCT oi.order_id) as order_count
       FROM order_items oi
       JOIN orders o ON o.id = oi.order_id
-      WHERE o.order_date BETWEEN ? AND ?
+      WHERE o.order_date >= ? AND o.order_date <= ?
       GROUP BY oi.service_name
       ORDER BY total_revenue DESC
       LIMIT 10
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start, end]);
 
     final topServices = serviceResult.map((row) {
       return ServiceSummary(
@@ -242,14 +243,14 @@ class ReportRepository {
     DateTime endDate,
   ) async {
     final db = await _databaseHelper.database;
-    final start = DateTime(startDate.year, startDate.month, startDate.day);
-    final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final startStr = DateTime(startDate.year, startDate.month, startDate.day).toIso8601String();
+    final endStr = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999).toIso8601String();
 
     // Get orders
     final orderMaps = await db.query(
       'orders',
-      where: 'order_date BETWEEN ? AND ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+      where: 'order_date >= ? AND order_date <= ?',
+      whereArgs: [startStr, endStr],
       orderBy: 'order_date DESC',
     );
 
@@ -278,14 +279,14 @@ class ReportRepository {
     DateTime endDate,
   ) async {
     final db = await _databaseHelper.database;
-    final start = DateTime(startDate.year, startDate.month, startDate.day);
-    final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final startStr = DateTime(startDate.year, startDate.month, startDate.day).toIso8601String();
+    final endStr = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999).toIso8601String();
 
     // Get purchases
     final purchaseMaps = await db.query(
       'purchase_orders',
-      where: 'order_date BETWEEN ? AND ? AND status != ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String(), 'cancelled'],
+      where: 'order_date >= ? AND order_date <= ? AND status != ?',
+      whereArgs: [startStr, endStr, 'cancelled'],
       orderBy: 'order_date DESC',
     );
 

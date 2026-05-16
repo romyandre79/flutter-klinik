@@ -1,5 +1,5 @@
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/unit.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/unit.dart';
 
 class UnitRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;

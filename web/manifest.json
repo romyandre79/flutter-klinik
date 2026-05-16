@@ -1,6 +1,6 @@
 {
-    "name": "kreatifmajumu_pos_offline",
-    "short_name": "kreatifmajumu_pos_offline",
+    "name": "kreatif_klinik",
+    "short_name": "kreatif_klinik",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

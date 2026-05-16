@@ -1,5 +1,5 @@
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/pengumuman_template.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/pengumuman_template.dart';
 
 class PengumumanTemplateRepository {
   final DatabaseHelper _databaseHelper;

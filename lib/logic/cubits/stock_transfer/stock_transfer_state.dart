@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_pos_offline/data/models/stock_transfer.dart';
+import 'package:kreatif_klinik/data/models/stock_transfer.dart';
 
 abstract class StockTransferState extends Equatable {
   const StockTransferState();

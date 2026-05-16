@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_pos_offline/data/models/pengumuman_template.dart';
+import 'package:kreatif_klinik/data/models/pengumuman_template.dart';
 
 abstract class PengumumanState extends Equatable {
   const PengumumanState();

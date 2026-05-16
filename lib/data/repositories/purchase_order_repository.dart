@@ -1,13 +1,16 @@
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/purchase_order.dart';
-import 'package:flutter_pos_offline/data/models/purchase_order_item.dart';
-import 'package:flutter_pos_offline/data/models/supplier.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/purchase_order.dart';
+import 'package:kreatif_klinik/data/models/purchase_order_item.dart';
+import 'package:kreatif_klinik/data/models/supplier.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
 
 class PurchaseOrderRepository {
   final DatabaseHelper _databaseHelper;
+  final ProductRepository _productRepository;
 
-  PurchaseOrderRepository({DatabaseHelper? databaseHelper})
-      : _databaseHelper = databaseHelper ?? DatabaseHelper.instance;
+  PurchaseOrderRepository({DatabaseHelper? databaseHelper, ProductRepository? productRepository})
+      : _databaseHelper = databaseHelper ?? DatabaseHelper.instance,
+        _productRepository = productRepository ?? ProductRepository();
 
   // Get all POs with basic info
   Future<List<PurchaseOrder>> getAllPurchaseOrders() async {
@@ -128,9 +131,12 @@ class PurchaseOrderRepository {
           final quantity = item['quantity'] as int;
 
           if (productId != null) {
-            await txn.rawUpdate(
-              'UPDATE products SET stock = COALESCE(stock, 0) + ?, updated_at = ? WHERE id = ?',
-              [quantity, DateTime.now().toIso8601String(), productId],
+            final unitName = item['unit'] as String? ?? 'pcs';
+            await _productRepository.updateStockByUnitName(
+              txn, 
+              productId, 
+              unitName, 
+              quantity.toDouble(),
             );
           }
         }

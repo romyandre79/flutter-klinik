@@ -1,5 +1,5 @@
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/customer.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
 
 class CustomerRepository {
   final DatabaseHelper _databaseHelper;
@@ -66,6 +66,7 @@ class CustomerRepository {
       'phone': customer.phone?.trim(),
       'address': customer.address?.trim(),
       'notes': customer.notes?.trim(),
+      'default_discount': customer.defaultDiscount,
       'total_orders': 0,
       'total_spent': 0,
       'created_at': now,
@@ -109,6 +110,7 @@ class CustomerRepository {
         'phone': customer.phone?.trim(),
         'address': customer.address?.trim(),
         'notes': customer.notes?.trim(),
+        'default_discount': customer.defaultDiscount,
         'updated_at': now,
       },
       where: 'id = ?',
@@ -325,6 +327,7 @@ class CustomerRepository {
         'phone': customer.phone?.trim(),
         'address': customer.address?.trim(),
         'notes': customer.notes?.trim(),
+        'default_discount': customer.defaultDiscount,
         'total_orders': 0,
         'total_spent': 0,
         'created_at': now,

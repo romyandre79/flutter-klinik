@@ -1,31 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutter_pos_offline/core/constants/app_constants.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/data/models/user.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/auth/auth_state.dart';
-import 'package:flutter_pos_offline/logic/cubits/settings/settings_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/settings/settings_state.dart';
-import 'package:flutter_pos_offline/logic/cubits/user/user_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/customer/customer_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/settings/user_management_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/settings/printer_settings_screen.dart';
-import 'package:flutter_pos_offline/logic/cubits/printer/printer_cubit.dart';
-import 'package:flutter_pos_offline/logic/cubits/product/product_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/products/product_list_screen.dart';
-import 'package:flutter_pos_offline/presentation/screens/customers/customer_list_screen.dart';
-import 'package:flutter_pos_offline/data/repositories/product_repository.dart';
-import 'package:flutter_pos_offline/data/repositories/supplier_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/purchasing/supplier_list_screen.dart';
-import 'package:flutter_pos_offline/data/repositories/unit_repository.dart';
-import 'package:flutter_pos_offline/logic/cubits/unit/unit_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/settings/unit_list_screen.dart';
-import 'package:flutter_pos_offline/data/services/database_service.dart';
-import 'package:flutter_pos_offline/logic/cubits/pengumuman/pengumuman_cubit.dart';
-import 'package:flutter_pos_offline/presentation/screens/settings/pengumuman_template_screen.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/data/models/user.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_klinik/logic/cubits/settings/settings_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/settings/settings_state.dart';
+import 'package:kreatif_klinik/logic/cubits/user/user_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/settings/user_management_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/settings/printer_settings_screen.dart';
+import 'package:kreatif_klinik/logic/cubits/printer/printer_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/products/product_list_screen.dart';
+import 'package:kreatif_klinik/presentation/screens/customers/customer_list_screen.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/purchasing/supplier_list_screen.dart';
+import 'package:kreatif_klinik/data/repositories/unit_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/settings/unit_list_screen.dart';
+import 'package:kreatif_klinik/data/services/database_service.dart';
+import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/settings/pengumuman_template_screen.dart';
+import 'package:kreatif_klinik/logic/sync/sync_cubit.dart';
+import 'package:kreatif_klinik/logic/sync/sync_state.dart';
+import 'package:kreatif_klinik/core/services/session_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -404,6 +407,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             }
           },
         ),
+        BlocListener<SyncCubit, SyncState>(
+          listener: (context, state) {
+            if (state is SyncSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppThemeColors.success,
+                ),
+              );
+            } else if (state is SyncFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: AppThemeColors.error,
+                ),
+              );
+            }
+          },
+        ),
       ],
       child: Scaffold(
         backgroundColor: AppThemeColors.background,
@@ -438,21 +460,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                           // Store Info Section
                           _buildSection(
-                            title: 'Informasi Toko',
+                            title: 'Informasi Apotik/Klinik',
                             children: [
                               _buildSettingTile(
                                 context: context,
                                 icon: Icons.store,
-                                title: 'Nama Toko',
+                                title: 'Nama Apotik/Klinik',
                                 subtitle:
                                     storeInfo?.name ??
                                     AppConstants.defaultStoreName,
                                 onTap: () => _showEditDialog(
-                                  title: 'Ubah Data Nama Toko',
+                                  title: 'Ubah Data Nama Apotik/Klinik',
                                   currentValue:
                                       storeInfo?.name ??
                                       AppConstants.defaultStoreName,
-                                  hint: 'Masukkan nama toko',
+                                  hint: 'Masukkan nama Apotik/Klinik',
                                   icon: Icons.store,
                                   onSave: (value) =>
                                       _settingsCubit.updateStoreName(value),
@@ -471,7 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   currentValue:
                                       storeInfo?.address ??
                                       AppConstants.defaultStoreAddress,
-                                  hint: 'Masukkan alamat toko',
+                                  hint: 'Masukkan alamat Apotik/Klinik',
                                   icon: Icons.location_on,
                                   maxLines: 2,
                                   onSave: (value) => _settingsCubit
@@ -695,11 +717,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ],
                           ),
 
+                          // Sync Section
+                          _buildSection(
+                            title: 'Sinkronisasi Server',
+                            children: [
+                              BlocBuilder<SyncCubit, SyncState>(
+                                builder: (context, state) {
+                                  final isLoading = state is SyncLoading;
+                                  return _buildSettingTile(
+                                    context: context,
+                                    icon: isLoading ? Icons.sync : Icons.cloud_sync,
+                                    title: 'Sinkronisasi Data',
+                                    subtitle: isLoading 
+                                        ? (state as SyncLoading).message 
+                                        : 'Upload transaksi & download master data',
+                                    onTap: isLoading ? null : () => context.read<SyncCubit>().syncData(),
+                                    trailing: isLoading 
+                                        ? const SizedBox(
+                                            width: 20, 
+                                            height: 20, 
+                                            child: CircularProgressIndicator(strokeWidth: 2)
+                                          )
+                                        : null,
+                                  );
+                                },
+                              ),
+                              _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.settings_remote,
+                                title: 'Pengaturan Server',
+                                subtitle: 'Atur alamat URL server sinkronisasi',
+                                onTap: () async {
+                                  final session = await SessionService.getInstance();
+                                  final currentUrl = session.getBaseUrl() ?? '';
+                                  if (context.mounted) {
+                                    _showEditDialog(
+                                      title: 'Alamat Server',
+                                      currentValue: currentUrl,
+                                      hint: 'https://api.yourserver.com',
+                                      icon: Icons.dns,
+                                      onSave: (value) async {
+                                        await session.setBaseUrl(value);
+                                      },
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+
+
                           // Database Management Section
                           if (user != null && user.role == UserRole.owner)
                             _buildSection(
                               title: 'Manajemen Data',
                               children: [
+                                _buildSettingTile(
+                                  context: context,
+                                  icon: Icons.calculate_outlined,
+                                  title: 'Hitung Ulang Stok',
+                                  subtitle: 'Koreksi stok produk berdasarkan data satuan',
+                                  onTap: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Hitung Ulang Stok?'),
+                                        content: const Text(
+                                          'Stok semua produk akan dihitung ulang dari data per-satuan. '
+                                          'Stok satuan yang negatif (akibat bug konversi) akan diperbaiki otomatis.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: const Text('Batal'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: const Text('Hitung Ulang'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed == true && context.mounted) {
+                                      try {
+                                        await context.read<ProductRepository>().recalculateAllStocks();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Stok berhasil dihitung ulang'),
+                                              backgroundColor: AppThemeColors.success,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Gagal: $e'),
+                                              backgroundColor: AppThemeColors.error,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                ),
+                                _buildDivider(),
                                 _buildSettingTile(
                                   context: context,
                                   icon: Icons.backup,
@@ -1079,6 +1203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     VoidCallback? onTap,
     bool showArrow = true,
+    Widget? trailing,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1122,8 +1247,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+              // Trailing widget
+              if (trailing != null) ...[
+                const SizedBox(width: AppSpacing.md),
+                trailing,
+              ],
               // Arrow or edit icon
-              if (showArrow && onTap != null)
+              if (showArrow && onTap != null && trailing == null)
                 Container(
                   width: 28,
                   height: 28,

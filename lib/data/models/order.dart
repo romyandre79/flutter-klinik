@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_pos_offline/data/models/order_item.dart';
-import 'package:flutter_pos_offline/data/models/payment.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/payment.dart';
 
 enum OrderStatus { pending, process, ready, done }
 
@@ -72,11 +72,14 @@ class Order extends Equatable {
   final int totalItems;
   final double totalWeight;
   final int totalPrice;
+  final int totalDiscount;
   final int paid;
   final String? notes;
   final int? createdBy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int isSynced;
+  final int? serverId;
 
   // Relations (loaded separately)
   final List<OrderItem>? items;
@@ -94,11 +97,14 @@ class Order extends Equatable {
     this.totalItems = 0,
     this.totalWeight = 0,
     required this.totalPrice,
+    this.totalDiscount = 0,
     this.paid = 0,
     this.notes,
     this.createdBy,
     this.createdAt,
     this.updatedAt,
+    this.isSynced = 0,
+    this.serverId,
     this.items,
     this.payments,
   });
@@ -116,11 +122,14 @@ class Order extends Equatable {
       'total_items': totalItems,
       'total_weight': totalWeight,
       'total_price': totalPrice,
+      'total_discount': totalDiscount,
       'paid': paid,
       'notes': notes,
       'created_by': createdBy,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'is_synced': isSynced,
+      'server_id': serverId,
     };
   }
 
@@ -139,6 +148,7 @@ class Order extends Equatable {
       totalItems: (map['total_items'] as int?) ?? 0,
       totalWeight: (map['total_weight'] as num?)?.toDouble() ?? 0,
       totalPrice: map['total_price'] as int,
+      totalDiscount: (map['total_discount'] as int?) ?? 0,
       paid: (map['paid'] as int?) ?? 0,
       notes: map['notes'] as String?,
       createdBy: map['created_by'] as int?,
@@ -148,6 +158,8 @@ class Order extends Equatable {
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'] as String)
           : null,
+      isSynced: (map['is_synced'] as int?) ?? 0,
+      serverId: map['server_id'] as int?,
     );
   }
 
@@ -163,11 +175,14 @@ class Order extends Equatable {
     int? totalItems,
     double? totalWeight,
     int? totalPrice,
+    int? totalDiscount,
     int? paid,
     String? notes,
     int? createdBy,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? isSynced,
+    int? serverId,
     List<OrderItem>? items,
     List<Payment>? payments,
   }) {
@@ -183,25 +198,29 @@ class Order extends Equatable {
       totalItems: totalItems ?? this.totalItems,
       totalWeight: totalWeight ?? this.totalWeight,
       totalPrice: totalPrice ?? this.totalPrice,
+      totalDiscount: totalDiscount ?? this.totalDiscount,
       paid: paid ?? this.paid,
       notes: notes ?? this.notes,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isSynced: isSynced ?? this.isSynced,
+      serverId: serverId ?? this.serverId,
       items: items ?? this.items,
       payments: payments ?? this.payments,
     );
   }
 
   // Helper methods
-  int get remainingPayment => totalPrice - paid;
+  int get remainingPayment => (totalPrice - paid).clamp(0, 999999999);
+  int get change => (paid - totalPrice).clamp(0, 999999999);
   bool get isPaid => paid >= totalPrice;
   bool get hasDeposit => paid > 0 && paid < totalPrice;
 
   // Aliases for printer service
   String get invoiceNumber => invoiceNo;
-  int get subtotal => totalPrice;
-  int get discount => 0; // No discount feature yet
+  int get subtotal => totalPrice + totalDiscount;
+  int get discount => totalDiscount;
   int get totalAmount => totalPrice;
   int get paidAmount => paid;
 
@@ -252,10 +271,13 @@ class Order extends Equatable {
         totalItems,
         totalWeight,
         totalPrice,
+        totalDiscount,
         paid,
         notes,
         createdBy,
         createdAt,
         updatedAt,
+        isSynced,
+        serverId,
       ];
 }

@@ -1,9 +1,10 @@
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_pos_offline/data/models/order.dart';
-import 'package:flutter_pos_offline/data/repositories/settings_repository.dart';
-import 'package:flutter_pos_offline/core/utils/currency_formatter.dart';
-import 'package:flutter_pos_offline/core/utils/date_formatter.dart';
-import 'package:flutter_pos_offline/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/repositories/settings_repository.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
+
 
 class WhatsAppService {
   static final WhatsAppService _instance = WhatsAppService._internal();

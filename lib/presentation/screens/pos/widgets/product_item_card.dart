@@ -1,16 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_pos_offline/core/theme/app_theme.dart';
-import 'package:flutter_pos_offline/core/utils/currency_formatter.dart';
-import 'package:flutter_pos_offline/data/models/product.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/data/models/product_unit.dart';
 
 class ProductItemCard extends StatelessWidget {
   final Product product;
+  final ProductUnit? selectedUnit;
   final VoidCallback onTap;
 
   const ProductItemCard({
     super.key,
     required this.product,
+    this.selectedUnit,
     required this.onTap,
   });
 
@@ -31,13 +34,13 @@ class ProductItemCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Initial or Icon
+              // Product Image / Placeholder
               Container(
-                width: 36,
-                height: 36,
+                width: double.infinity,
+                height: 80,
                 decoration: BoxDecoration(
-                  color: AppThemeColors.primarySurface,
-                  borderRadius: AppRadius.smRadius,
+                  color: AppThemeColors.primarySurface.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppSpacing.sm),
                   image: product.imageUrl != null && File(product.imageUrl!).existsSync()
                       ? DecorationImage(
                           image: FileImage(File(product.imageUrl!)),
@@ -50,8 +53,9 @@ class ProductItemCard extends StatelessWidget {
                     : Center(
                         child: Text(
                           product.name.isNotEmpty ? product.name[0].toUpperCase() : '?',
-                          style: AppTypography.titleMedium.copyWith(
-                            color: AppThemeColors.primary,
+                          style: AppTypography.titleLarge.copyWith(
+                            color: AppThemeColors.primary.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -70,7 +74,7 @@ class ProductItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '/${product.unit}',
+                      '/${selectedUnit?.unitName ?? product.unit}',
                       style: AppTypography.labelSmall.copyWith(
                         color: AppThemeColors.textSecondary,
                       ),
@@ -78,9 +82,31 @@ class ProductItemCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // Stock Indicator
+              if (product.type == ProductType.goods)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (selectedUnit?.stock ?? product.stock ?? 0) > 0 
+                        ? Colors.green.withValues(alpha: 0.1) 
+                        : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Stok: ${selectedUnit?.stock ?? product.stock ?? 0}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: (selectedUnit?.stock ?? product.stock ?? 0) > 0 ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
               // Price
               Text(
-                CurrencyFormatter.format(product.price),
+                CurrencyFormatter.format(selectedUnit?.price ?? product.price),
                 style: AppTypography.titleMedium.copyWith(
                   color: AppThemeColors.primary,
                   fontWeight: FontWeight.bold,

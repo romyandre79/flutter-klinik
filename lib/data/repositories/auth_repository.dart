@@ -1,7 +1,7 @@
-import 'package:flutter_pos_offline/core/services/session_service.dart';
-import 'package:flutter_pos_offline/core/utils/password_helper.dart';
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/user.dart';
+import 'package:kreatif_klinik/core/services/session_service.dart';
+import 'package:kreatif_klinik/core/utils/password_helper.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/user.dart';
 
 class AuthRepository {
   final DatabaseHelper _databaseHelper;

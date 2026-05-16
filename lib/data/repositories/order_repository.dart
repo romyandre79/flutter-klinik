@@ -1,18 +1,22 @@
-import 'package:flutter_pos_offline/data/database/database_helper.dart';
-import 'package:flutter_pos_offline/data/models/order.dart';
-import 'package:flutter_pos_offline/data/models/order_item.dart';
-import 'package:flutter_pos_offline/data/models/payment.dart';
-import 'package:flutter_pos_offline/data/repositories/customer_repository.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/payment.dart';
+import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
 
 class OrderRepository {
   final DatabaseHelper _databaseHelper;
   final CustomerRepository _customerRepository;
+  final ProductRepository _productRepository;
 
   OrderRepository({
     DatabaseHelper? databaseHelper,
     CustomerRepository? customerRepository,
+    ProductRepository? productRepository,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper.instance,
-        _customerRepository = customerRepository ?? CustomerRepository();
+        _customerRepository = customerRepository ?? CustomerRepository(),
+        _productRepository = productRepository ?? ProductRepository();
 
   /// Get all orders with optional filter and pagination
   Future<List<Order>> getAllOrders({
@@ -113,6 +117,7 @@ class OrderRepository {
         'total_items': order.totalItems,
         'total_weight': order.totalWeight,
         'total_price': order.totalPrice,
+        'total_discount': order.totalDiscount,
         'paid': order.paid,
         'notes': order.notes,
         'created_by': order.createdBy,
@@ -130,6 +135,7 @@ class OrderRepository {
           'quantity': item.quantity,
           'unit': item.unit,
           'price_per_unit': item.pricePerUnit,
+          'discount': item.discount,
           'subtotal': item.subtotal,
         });
       }
@@ -152,9 +158,11 @@ class OrderRepository {
       if (order.status == OrderStatus.done) {
         for (final item in items) {
           if (item.productId != null) {
-            await txn.rawUpdate(
-              'UPDATE products SET stock = COALESCE(stock, 0) - ?, updated_at = ? WHERE id = ?',
-              [item.quantity, DateTime.now().toIso8601String(), item.productId],
+            await _productRepository.updateStockByUnitName(
+              txn, 
+              item.productId!, 
+              item.unit, 
+              -item.quantity.toDouble(), // Negative for deduction
             );
           }
         }
@@ -221,9 +229,12 @@ class OrderRepository {
           final quantity = (itemMap['quantity'] as num?)?.toDouble() ?? 0.0;
 
           if (productId != null) {
-            await txn.rawUpdate(
-              'UPDATE products SET stock = COALESCE(stock, 0) - ?, updated_at = ? WHERE id = ?',
-              [quantity, DateTime.now().toIso8601String(), productId],
+            final unitName = itemMap['unit'] as String? ?? 'pcs';
+            await _productRepository.updateStockByUnitName(
+              txn, 
+              productId, 
+              unitName, 
+              -quantity, // Negative for deduction
             );
           }
         }
@@ -265,7 +276,7 @@ class OrderRepository {
     final db = await _databaseHelper.database;
 
     final startStr = DateTime(start.year, start.month, start.day).toIso8601String();
-    final endStr = DateTime(end.year, end.month, end.day, 23, 59, 59).toIso8601String();
+    final endStr = DateTime(end.year, end.month, end.day, 23, 59, 59, 999).toIso8601String();
 
     final result = await db.query(
       'orders',
@@ -303,7 +314,7 @@ class OrderRepository {
     final counts = <OrderStatus, int>{};
     for (final status in OrderStatus.values) {
       final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM orders WHERE status = ? AND created_at >= ? AND created_at <= ?',
+        'SELECT COUNT(*) as count FROM orders WHERE status = ? AND DATE(created_at) BETWEEN DATE(?) AND DATE(?)',
         [status.value, startOfDay, endOfDay],
       );
       counts[status] = result.first['count'] as int;
@@ -338,5 +349,35 @@ class OrderRepository {
       where: 'id = ?',
       whereArgs: [orderId],
     );
+  }
+
+  /// Get today's total sales (Accrual Basis)
+  Future<int> getTodaySales() async {
+    final db = await _databaseHelper.database;
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
+    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT SUM(total_price) as total FROM orders WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
+      [startOfDay, endOfDay],
+    );
+
+    return (result.first['total'] as int?) ?? 0;
+  }
+
+  /// Get this month's total sales (Accrual Basis)
+  Future<int> getThisMonthSales() async {
+    final db = await _databaseHelper.database;
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59).toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT SUM(total_price) as total FROM orders WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
+      [startOfMonth, endOfMonth],
+    );
+
+    return (result.first['total'] as int?) ?? 0;
   }
 }

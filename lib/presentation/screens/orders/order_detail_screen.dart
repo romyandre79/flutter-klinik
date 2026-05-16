@@ -1098,7 +1098,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const SizedBox(height: AppSpacing.md),
             if (order.items != null)
               ...order.items!.map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1126,17 +1126,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              Text(
-                                '${item.quantity} ${item.unit} x ${CurrencyFormatter.format(item.pricePerUnit)}',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppThemeColors.textSecondary,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${item.quantity} ${item.unit} x ${CurrencyFormatter.format(item.pricePerUnit)}',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppThemeColors.textSecondary,
+                                    ),
+                                  ),
+                                  if (item.discount > 0) ...[
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Text(
+                                      '(Disc: -${CurrencyFormatter.format(item.discount)})',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: AppThemeColors.error,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
                           ),
                         ),
                         Text(
-                          CurrencyFormatter.format(item.subtotal),
+                          CurrencyFormatter.format(item.grossSubtotal),
                           style: AppTypography.titleSmall.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -1148,6 +1162,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               height: 1,
               color: AppThemeColors.divider,
               margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            ),
+            // Subtotal (Gross)
+            _buildSummaryRow('Subtotal', CurrencyFormatter.format(order.subtotal)),
+            const SizedBox(height: AppSpacing.xs),
+            // Total Discount
+            if (order.totalDiscount > 0) ...[
+              _buildSummaryRow(
+                'Diskon',
+                '-${CurrencyFormatter.format(order.totalDiscount)}',
+                valueColor: AppThemeColors.error,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ],
+            // Divider for final total
+            Container(
+              height: 1,
+              color: AppThemeColors.divider.withValues(alpha: 0.5),
+              margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1170,6 +1202,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppThemeColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.bodySmall.copyWith(
+            fontWeight: FontWeight.w600,
+            color: valueColor,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1336,10 +1389,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            // Jika lunas dan ada kelebihan bayar, tampilkan sebagai "Kembalian"
-            // Jika belum lunas, tampilkan sebagai "Sisa"
-            if (order.isPaid && order.paidAmount > order.totalAmount) ...[
+            if (order.change > 0) ...[
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1350,7 +1401,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   ),
                   Text(
-                    CurrencyFormatter.format(order.paidAmount - order.totalAmount),
+                    CurrencyFormatter.format(order.change),
                     style: AppTypography.titleMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppThemeColors.success,
@@ -1358,7 +1409,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ],
               ),
-            ] else if (!order.isPaid) ...[
+            ],
+            if (!order.isPaid) ...[
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

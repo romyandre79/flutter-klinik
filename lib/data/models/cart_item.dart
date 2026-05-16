@@ -18,7 +18,10 @@ class CartItem extends Equatable {
   });
 
   int get effectivePrice => selectedUnit?.price ?? product.price;
-  int get subtotal => ((effectivePrice - discount) * quantity).round();
+  int get grossTotal => (effectivePrice * quantity).round();
+  int get subtotal {
+    return grossTotal - discount;
+  }
 
   CartItem copyWith({
     Product? product,

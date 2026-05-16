@@ -87,22 +87,32 @@ class PosCubit extends Cubit<PosState> {
       if (existingIndex >= 0) {
         // Increment quantity
         final existingItem = currentCart[existingIndex];
+        final newQuantity = existingItem.quantity + 1;
+        
+        // Recalculate discount for the new quantity if customer has default discount
+        int newDiscount = existingItem.discount;
+        if (currentState.selectedCustomer != null && currentState.selectedCustomer!.defaultDiscount > 0) {
+           final double basePrice = (existingItem.selectedUnit?.price ?? existingItem.product.price).toDouble();
+           newDiscount = (basePrice * newQuantity * currentState.selectedCustomer!.defaultDiscount / 100).round();
+        }
+
         currentCart[existingIndex] = existingItem.copyWith(
-          quantity: existingItem.quantity + 1,
+          quantity: newQuantity,
+          discount: newDiscount,
         );
       } else {
         // Add new item
-        int discountPerUnit = 0;
+        int discountAmount = 0;
         final basePrice = selectedUnit?.price ?? product.price;
         
         if (currentState.selectedCustomer != null && currentState.selectedCustomer!.defaultDiscount > 0) {
-          discountPerUnit = (basePrice * currentState.selectedCustomer!.defaultDiscount / 100).round();
+          discountAmount = (basePrice * 1 * currentState.selectedCustomer!.defaultDiscount / 100).round();
         }
 
         currentCart.add(CartItem(
           product: product,
           quantity: 1,
-          discount: discountPerUnit,
+          discount: discountAmount, // For qty 1, total line discount == per unit discount
           selectedUnit: selectedUnit,
         ));
       }
@@ -127,7 +137,7 @@ class PosCubit extends Cubit<PosState> {
 
         currentCart[index] = item.copyWith(
           selectedUnit: unit,
-          discount: newDiscount,
+          discount: (newDiscount * item.quantity).round(),
         );
         emit(currentState.copyWith(cartItems: currentCart));
       }
@@ -140,11 +150,21 @@ class PosCubit extends Cubit<PosState> {
       final currentState = state as PosLoaded;
       final currentCart = List<CartItem>.from(currentState.cartItems);
 
-      final index = currentCart.indexWhere((i) => i.product.id == item.product.id);
+      final index = currentCart.indexOf(item);
       if (index >= 0) {
         if (currentCart[index].quantity > 1) {
+          final newQuantity = currentCart[index].quantity - 1;
+          
+          // Recalculate discount for the new quantity if customer has default discount
+          int newDiscount = currentCart[index].discount;
+          if (currentState.selectedCustomer != null && currentState.selectedCustomer!.defaultDiscount > 0) {
+             final double basePrice = currentCart[index].effectivePrice.toDouble();
+             newDiscount = (basePrice * newQuantity * currentState.selectedCustomer!.defaultDiscount / 100).round();
+          }
+
           currentCart[index] = currentCart[index].copyWith(
-            quantity: currentCart[index].quantity - 1,
+            quantity: newQuantity,
+            discount: newDiscount,
           );
         } else {
           currentCart.removeAt(index);
@@ -158,7 +178,12 @@ class PosCubit extends Cubit<PosState> {
   void clearCart() {
     if (state is PosLoaded) {
       final currentState = state as PosLoaded;
-      emit(currentState.copyWith(cartItems: []));
+      emit(currentState.copyWith(
+        cartItems: [],
+        orderDiscount: 0,
+        selectedCustomer: null,
+        customerName: 'Walk-in Customer',
+      ));
     }
   }
 
@@ -173,8 +198,8 @@ class PosCubit extends Cubit<PosState> {
       
       for (int i = 0; i < currentCart.length; i++) {
         final double basePrice = (currentCart[i].selectedUnit?.price ?? currentCart[i].product.price).toDouble();
-        final int discountPerUnit = (basePrice * discountPercent / 100).round();
-        currentCart[i] = currentCart[i].copyWith(discount: discountPerUnit);
+        final int totalDiscount = (basePrice * currentCart[i].quantity * discountPercent / 100).round();
+        currentCart[i] = currentCart[i].copyWith(discount: totalDiscount);
       }
 
       emit(currentState.copyWith(
@@ -197,30 +222,39 @@ class PosCubit extends Cubit<PosState> {
   }
 
   // Update quantity directly
-  void updateQuantity(Product product, double quantity) {
+  void updateQuantity(CartItem item, double quantity) {
     if (state is PosLoaded) {
       final currentState = state as PosLoaded;
       final currentCart = List<CartItem>.from(currentState.cartItems);
 
-      final index = currentCart.indexWhere((i) => i.product.id == product.id);
+      final index = currentCart.indexOf(item);
       if (index >= 0) {
         if (quantity <= 0) {
           currentCart.removeAt(index);
         } else {
-          currentCart[index] = currentCart[index].copyWith(quantity: quantity);
+          // If customer has default discount, recalculate it for the new quantity
+          int newDiscount = currentCart[index].discount;
+          if (currentState.selectedCustomer != null && currentState.selectedCustomer!.defaultDiscount > 0) {
+             final double basePrice = currentCart[index].effectivePrice.toDouble();
+             newDiscount = (basePrice * quantity * currentState.selectedCustomer!.defaultDiscount / 100).round();
+          }
+          currentCart[index] = currentCart[index].copyWith(
+            quantity: quantity,
+            discount: newDiscount,
+          );
         }
         emit(currentState.copyWith(cartItems: currentCart));
       }
     }
   }
 
-  // Update item discount in Rupiah (per unit)
-  void updateItemDiscount(Product product, int discountAmount) {
+  // Update item discount in Rupiah (Total line discount)
+  void updateItemDiscount(CartItem item, int discountAmount) {
     if (state is PosLoaded) {
       final currentState = state as PosLoaded;
       final currentCart = List<CartItem>.from(currentState.cartItems);
 
-      final index = currentCart.indexWhere((i) => i.product.id == product.id);
+      final index = currentCart.indexOf(item);
       if (index >= 0) {
         currentCart[index] = currentCart[index].copyWith(discount: discountAmount);
         emit(currentState.copyWith(cartItems: currentCart));

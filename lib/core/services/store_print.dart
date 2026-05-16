@@ -232,6 +232,36 @@ class StorePrint {
     );
 
     // ========== TOTAL ==========
+    // Subtotal (Gross)
+    bytes += generator.row([
+      PosColumn(
+        text: 'Subtotal',
+        width: 6,
+        styles: const PosStyles(align: PosAlign.left),
+      ),
+      PosColumn(
+        text: CurrencyFormatter.formatNoSymbol(order.subtotal),
+        width: 6,
+        styles: const PosStyles(align: PosAlign.right),
+      ),
+    ]);
+
+    // Discount (if any)
+    if (order.discount > 0) {
+      bytes += generator.row([
+        PosColumn(
+          text: 'Diskon',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: '-${CurrencyFormatter.formatNoSymbol(order.discount)}',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]);
+    }
+
     bytes += generator.row([
       PosColumn(
         text: 'TOTAL',

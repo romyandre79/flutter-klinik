@@ -775,6 +775,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               children: [
                                 _buildSettingTile(
                                   context: context,
+                                  icon: Icons.calculate_outlined,
+                                  title: 'Hitung Ulang Stok',
+                                  subtitle: 'Koreksi stok produk berdasarkan data satuan',
+                                  onTap: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Hitung Ulang Stok?'),
+                                        content: const Text(
+                                          'Stok semua produk akan dihitung ulang dari data per-satuan. '
+                                          'Stok satuan yang negatif (akibat bug konversi) akan diperbaiki otomatis.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: const Text('Batal'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: const Text('Hitung Ulang'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed == true && context.mounted) {
+                                      try {
+                                        await context.read<ProductRepository>().recalculateAllStocks();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Stok berhasil dihitung ulang'),
+                                              backgroundColor: AppThemeColors.success,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Gagal: $e'),
+                                              backgroundColor: AppThemeColors.error,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                ),
+                                _buildDivider(),
+                                _buildSettingTile(
+                                  context: context,
                                   icon: Icons.backup,
                                   title: 'Backup Database',
                                   subtitle: 'Simpan salinan database',

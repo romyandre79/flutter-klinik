@@ -36,6 +36,8 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   late OrderCubit _orderCubit;
   late DashboardCubit _dashboardCubit;
+  late ReportCubit _reportCubit;
+  late UserCubit _userCubit;
   PosCubit? _posCubit;
 
   @override
@@ -48,12 +50,16 @@ class _MainScreenState extends State<MainScreen> {
       customerRepository: context.read<CustomerRepository>(),
       paymentRepository: context.read<PaymentRepository>(),
     )..loadOrders();
+    _reportCubit = ReportCubit();
+    _userCubit = UserCubit();
   }
 
   @override
   void dispose() {
     _orderCubit.close();
     _dashboardCubit.close();
+    _reportCubit.close();
+    _userCubit.close();
     _posCubit?.close();
     super.dispose();
   }
@@ -198,14 +204,14 @@ class _MainScreenState extends State<MainScreen> {
           );
           
           screens.add(
-            BlocProvider(
-              create: (_) => ReportCubit(),
+            BlocProvider.value(
+              value: _reportCubit,
               child: const ReportScreen(),
             ),
           );
           screens.add(
-            BlocProvider(
-              create: (_) => UserCubit(),
+            BlocProvider.value(
+              value: _userCubit,
               child: const SettingsScreen(),
             ),
           );

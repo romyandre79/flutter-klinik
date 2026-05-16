@@ -195,6 +195,64 @@ class ProductRepository {
       whereArgs: [id],
     );
   }
+
+  /// Recalculates products.stock for all products that have product_units.
+  ///
+  /// Step 1: Normalise any child units whose stock went negative (caused by the
+  /// old bug where deductions skipped parent-unit conversion). Each negative
+  /// child unit is "topped up" by retroactively breaking the required number of
+  /// whole parent units.
+  ///
+  /// Step 2: Derive products.stock = SUM(unit.stock * unit.multiplier) so the
+  /// product-level total correctly reflects the current per-unit stocks.
+  Future<void> recalculateAllStocks() async {
+    final db = await _databaseHelper.database;
+    final now = DateTime.now().toIso8601String();
+
+    await db.transaction((txn) async {
+      // Step 1 — fix negative child-unit stocks.
+      final negativeUnits = await txn.rawQuery(
+        'SELECT * FROM product_units WHERE stock < 0 AND parent_unit_id IS NOT NULL',
+      );
+
+      for (final row in negativeUnits) {
+        final unit = ProductUnit.fromMap(row);
+
+        final double deficit = -unit.stock; // positive amount we're short
+        // Whole parent units required to cover the deficit.
+        // multiplier = "1 child = multiplier parents", so deficit child units
+        // need ceil(deficit * multiplier) parent units.
+        final double parentNeeded = (deficit * unit.multiplier).ceilToDouble();
+        // Child units gained by breaking those parent units.
+        final double childGained = parentNeeded / unit.multiplier;
+
+        await txn.rawUpdate(
+          'UPDATE product_units SET stock = stock - ? WHERE id = ?',
+          [parentNeeded, unit.parentUnitId],
+        );
+        await txn.rawUpdate(
+          'UPDATE product_units SET stock = stock + ? WHERE id = ?',
+          [childGained, unit.id],
+        );
+      }
+
+      // Step 2 — recompute products.stock from per-unit stocks.
+      // products.stock = Σ(unit.stock × unit.multiplier) expressed in base units.
+      await txn.rawUpdate('''
+        UPDATE products
+        SET stock = (
+          SELECT COALESCE(SUM(pu.stock * pu.multiplier), 0)
+          FROM product_units pu
+          WHERE pu.product_id = products.id
+        ),
+        updated_at = ?
+        WHERE EXISTS (
+          SELECT 1 FROM product_units WHERE product_id = products.id
+        )
+      ''', [now]);
+    });
+  }
+
   Future<void> updateStock(int productId, double quantityChange, {int? unitId}) async {
     final db = await _databaseHelper.database;
     await db.transaction((txn) async {
@@ -212,7 +270,6 @@ class ProductRepository {
 
   // Public wrapper for unit-aware stock updates using unit Name (case-insensitive)
   Future<void> updateStockByUnitName(Transaction txn, int productId, String unitName, double quantityChange) async {
-    // Find the unit ID for this product and unit name (case-insensitive)
     final List<Map<String, dynamic>> unitResults = await txn.query(
       'product_units',
       where: 'product_id = ? AND LOWER(unit_name) = LOWER(?)',
@@ -221,24 +278,29 @@ class ProductRepository {
 
     if (unitResults.isNotEmpty) {
       final unit = ProductUnit.fromMap(unitResults.first);
-      // Update specific unit stock
-      final currentStock = unit.stock;
-      await txn.update(
-        'product_units', 
-        {'stock': currentStock + quantityChange}, 
-        where: 'id = ?', 
-        whereArgs: [unit.id]
-      );
-      
-      // Sync products.stock (Total in Base Unit)
-      // Assumption: 1 additional unit = multiplier * base unit
+
+      if (quantityChange < 0) {
+        // Deduction: auto-convert from parent unit if this unit has insufficient stock
+        await _deductStockRecursive(txn, productId, unit.id!, -quantityChange);
+      } else {
+        // Addition (e.g. stock purchase): add directly to this unit
+        await txn.update(
+          'product_units',
+          {'stock': unit.stock + quantityChange},
+          where: 'id = ?',
+          whereArgs: [unit.id],
+        );
+      }
+
+      // Sync products.stock (total in base unit).
+      // Convention: multiplier = "1 of this unit = multiplier base units"
       final deltaBase = quantityChange * unit.multiplier;
       await txn.rawUpdate(
         'UPDATE products SET stock = COALESCE(stock, 0) + ?, updated_at = ? WHERE id = ?',
         [deltaBase, DateTime.now().toIso8601String(), productId],
       );
     } else {
-      // Fallback: update products table if no specific unit record found
+      // Fallback: no unit record found, update the product-level stock directly
       await txn.rawUpdate(
         'UPDATE products SET stock = COALESCE(stock, 0) + ?, updated_at = ? WHERE id = ?',
         [quantityChange, DateTime.now().toIso8601String(), productId],
@@ -246,44 +308,39 @@ class ProductRepository {
     }
   }
 
-  // Recursive deduction with automatic conversion
+  // Deduct amountToDeduct from unitId's stock.
+  // If the unit has insufficient stock and has a parent unit, the shortfall is
+  // pulled from the parent (recursively), using the stored multiplier where
+  // multiplier = "1 of this unit = multiplier parent units" (e.g. pcs.multiplier=0.1 → 1 pcs = 0.1 pack).
   Future<void> _deductStockRecursive(Transaction txn, int productId, int unitId, double amountToDeduct) async {
     final List<Map<String, dynamic>> units = await txn.query('product_units', where: 'id = ?', whereArgs: [unitId]);
     if (units.isEmpty) return;
-    
+
     final unit = ProductUnit.fromMap(units.first);
-    double currentStock = unit.stock;
+    final double currentStock = unit.stock;
 
     if (currentStock >= amountToDeduct) {
-      await txn.update('product_units', {'stock': currentStock - amountToDeduct}, where: 'id = ?', whereArgs: [unitId]);
-    } else {
-      // Need more stock. Check if parent exists
-      if (unit.parentUnitId != null) {
-        // Calculate how many parent units we need to break
-        double neededFromParent = ((amountToDeduct - currentStock) / unit.multiplier).ceilToDouble();
-        
-        // Break X units of parent
-        await _deductStockRecursive(txn, productId, unit.parentUnitId!, neededFromParent);
-        
-        // Logging the auto-conversion
-        await txn.insert('unit_conversions', {
-          'product_id': productId,
-          'from_unit_id': unit.parentUnitId,
-          'to_unit_id': unitId,
-          'qty_changed': neededFromParent * unit.multiplier,
-          'type': 'auto',
-        });
+      await txn.update('product_units', {'stock': currentStock - amountToDeduct},
+          where: 'id = ?', whereArgs: [unitId]);
+    } else if (unit.parentUnitId != null) {
+      // Physical breaking model:
+      // - multiplier = "1 child = multiplier parents" (e.g. 1 pcs = 0.1 pack)
+      // - pcs per pack = 1 / multiplier (e.g. 1 / 0.1 = 10 pcs/pack)
+      // - must break whole parent units (ceil)
+      final double shortfall = amountToDeduct - currentStock;
+      final double parentUnitsNeeded = (shortfall * unit.multiplier).ceilToDouble();
 
-        // Current stock increased
-        final updatedUnits = await txn.query('product_units', where: 'id = ?', whereArgs: [unitId]);
-        final updatedStock = (updatedUnits.first['stock'] as num).toDouble() + (neededFromParent * unit.multiplier);
-        
-        // Now deduct
-        await txn.update('product_units', {'stock': updatedStock - amountToDeduct}, where: 'id = ?', whereArgs: [unitId]);
-      } else {
-        // No parent, but still need stock?
-        await txn.update('product_units', {'stock': currentStock - amountToDeduct}, where: 'id = ?', whereArgs: [unitId]);
-      }
+      await _deductStockRecursive(txn, productId, unit.parentUnitId!, parentUnitsNeeded);
+
+      // Breaking parentUnitsNeeded packs yields parentUnitsNeeded/multiplier child units.
+      // e.g. 1 pack / 0.1 = 10 pcs gained; sell 1 pcs → 9 pcs remain.
+      final double childGained = parentUnitsNeeded / unit.multiplier;
+      final double newStock = currentStock + childGained - amountToDeduct;
+      await txn.update('product_units', {'stock': newStock}, where: 'id = ?', whereArgs: [unitId]);
+    } else {
+      // No parent available; deduct anyway (stock goes negative — upstream validation should prevent this)
+      await txn.update('product_units', {'stock': currentStock - amountToDeduct},
+          where: 'id = ?', whereArgs: [unitId]);
     }
   }
 

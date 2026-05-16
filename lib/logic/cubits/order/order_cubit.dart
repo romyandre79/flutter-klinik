@@ -138,7 +138,7 @@ class OrderCubit extends Cubit<OrderState> {
       for (final item in items) {
         totalWeight += item.quantity;
         totalGross += (item.pricePerUnit * item.quantity).round();
-        itemDiscounts += (item.discount * item.quantity).round();
+        itemDiscounts += item.discount;
       }
       
       final combinedDiscount = itemDiscounts + totalDiscount;
@@ -147,10 +147,8 @@ class OrderCubit extends Cubit<OrderState> {
       // Generate invoice
       final invoiceNo = await InvoiceGenerator.generate();
 
-      // Hitung kembalian (jika bayar lebih dari total)
-      final change = initialPayment > totalPrice ? initialPayment - totalPrice : 0;
-      // Yang dicatat sebagai "paid" di order adalah maksimal = totalPrice
-      final paidAmount = initialPayment > totalPrice ? totalPrice : initialPayment;
+      // Yang dicatat sebagai "paid" di order adalah jumlah yang diterima
+      final paidAmount = initialPayment;
 
       // Create order
       final order = Order(
@@ -173,6 +171,9 @@ class OrderCubit extends Cubit<OrderState> {
       // Prepare initial payment if any
       Payment? payment;
       if (initialPayment > 0) {
+        // Hitung kembalian untuk pembayaran awal
+        final change = initialPayment > totalPrice ? initialPayment - totalPrice : 0;
+        
         payment = Payment(
           orderId: 0, // Will be set after order creation
           amount: initialPayment, // Simpan jumlah bayar apa adanya
@@ -189,17 +190,6 @@ class OrderCubit extends Cubit<OrderState> {
         items: items.map((item) => item.copyWith(orderId: 0)).toList(),
         initialPayment: payment,
       );
-
-      // Deduct stock for each item
-      for (final item in items) {
-        if (item.productId != null) {
-          await _productRepository.updateStock(
-            item.productId!,
-            -(item.quantity),
-            unitId: item.unitId,
-          );
-        }
-      }
 
       // Schedule notification
       try {

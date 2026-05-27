@@ -1,15 +1,15 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/services/notification_service.dart';
-import 'package:kreatif_klinik/core/utils/invoice_generator.dart';
-import 'package:kreatif_klinik/data/models/order.dart';
-import 'package:kreatif_klinik/data/models/order_item.dart';
-import 'package:kreatif_klinik/data/models/payment.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
-import 'package:kreatif_klinik/data/repositories/order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/payment_repository.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
+﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kreatif_otopart/core/services/notification_service.dart';
+import 'package:kreatif_otopart/core/utils/invoice_generator.dart';
+import 'package:kreatif_otopart/data/models/order.dart';
+import 'package:kreatif_otopart/data/models/order_item.dart';
+import 'package:kreatif_otopart/data/models/payment.dart';
+import 'package:kreatif_otopart/data/repositories/customer_repository.dart';
+import 'package:kreatif_otopart/data/repositories/order_repository.dart';
+import 'package:kreatif_otopart/data/repositories/payment_repository.dart';
+import 'package:kreatif_otopart/data/repositories/product_repository.dart';
+import 'package:kreatif_otopart/logic/cubits/order/order_state.dart';
+import 'package:kreatif_otopart/core/constants/app_constants.dart';
 
 class OrderCubit extends Cubit<OrderState> {
   final OrderRepository _orderRepository;
@@ -82,8 +82,9 @@ class OrderCubit extends Cubit<OrderState> {
     String? customerPhone,
     int? customerId,
     required List<OrderItem> items,
-    DateTime? dueDate, // Changed to nullable
+    DateTime? dueDate,
     String? notes,
+    String? nomorPolisi,
     int? createdBy,
     int initialPayment = 0,
     PaymentMethod paymentMethod = PaymentMethod.cash,
@@ -138,7 +139,7 @@ class OrderCubit extends Cubit<OrderState> {
       for (final item in items) {
         totalWeight += item.quantity;
         totalGross += (item.pricePerUnit * item.quantity).round();
-        itemDiscounts += (item.discount * item.quantity).round();
+        itemDiscounts += item.discount;
       }
       
       final combinedDiscount = itemDiscounts + totalDiscount;
@@ -147,10 +148,8 @@ class OrderCubit extends Cubit<OrderState> {
       // Generate invoice
       final invoiceNo = await InvoiceGenerator.generate();
 
-      // Hitung kembalian (jika bayar lebih dari total)
-      final change = initialPayment > totalPrice ? initialPayment - totalPrice : 0;
-      // Yang dicatat sebagai "paid" di order adalah maksimal = totalPrice
-      final paidAmount = initialPayment > totalPrice ? totalPrice : initialPayment;
+      // Yang dicatat sebagai "paid" di order adalah jumlah yang diterima
+      final paidAmount = initialPayment;
 
       // Create order
       final order = Order(
@@ -167,12 +166,16 @@ class OrderCubit extends Cubit<OrderState> {
         totalDiscount: combinedDiscount,
         paid: paidAmount,
         notes: notes?.trim(),
+        nomorPolisi: nomorPolisi?.trim().isEmpty == true ? null : nomorPolisi?.trim(),
         createdBy: createdBy,
       );
 
       // Prepare initial payment if any
       Payment? payment;
       if (initialPayment > 0) {
+        // Hitung kembalian untuk pembayaran awal
+        final change = initialPayment > totalPrice ? initialPayment - totalPrice : 0;
+        
         payment = Payment(
           orderId: 0, // Will be set after order creation
           amount: initialPayment, // Simpan jumlah bayar apa adanya
@@ -189,17 +192,6 @@ class OrderCubit extends Cubit<OrderState> {
         items: items.map((item) => item.copyWith(orderId: 0)).toList(),
         initialPayment: payment,
       );
-
-      // Deduct stock for each item
-      for (final item in items) {
-        if (item.productId != null) {
-          await _productRepository.updateStock(
-            item.productId!,
-            -(item.quantity),
-            unitId: item.unitId,
-          );
-        }
-      }
 
       // Schedule notification
       try {

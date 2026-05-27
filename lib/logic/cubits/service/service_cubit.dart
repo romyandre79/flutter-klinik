@@ -1,7 +1,7 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/data/models/service.dart';
-import 'package:kreatif_klinik/data/repositories/service_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/service/service_state.dart';
+﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kreatif_otopart/data/models/service.dart';
+import 'package:kreatif_otopart/data/repositories/service_repository.dart';
+import 'package:kreatif_otopart/logic/cubits/service/service_state.dart';
 
 class ServiceCubit extends Cubit<ServiceState> {
   final ServiceRepository _serviceRepository;

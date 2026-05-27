@@ -1,7 +1,7 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:kreatif_klinik/core/api/api_config.dart';
-import 'package:kreatif_klinik/core/services/log_service.dart';
+import 'package:kreatif_otopart/core/api/api_config.dart';
+import 'package:kreatif_otopart/core/services/log_service.dart';
 
 class ApiService {
   final Dio _dio;

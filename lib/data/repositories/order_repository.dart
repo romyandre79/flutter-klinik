@@ -1,9 +1,9 @@
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/data/models/order.dart';
-import 'package:kreatif_klinik/data/models/order_item.dart';
-import 'package:kreatif_klinik/data/models/payment.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+﻿import 'package:kreatif_otopart/data/database/database_helper.dart';
+import 'package:kreatif_otopart/data/models/order.dart';
+import 'package:kreatif_otopart/data/models/order_item.dart';
+import 'package:kreatif_otopart/data/models/payment.dart';
+import 'package:kreatif_otopart/data/repositories/customer_repository.dart';
+import 'package:kreatif_otopart/data/repositories/product_repository.dart';
 
 class OrderRepository {
   final DatabaseHelper _databaseHelper;
@@ -276,11 +276,11 @@ class OrderRepository {
     final db = await _databaseHelper.database;
 
     final startStr = DateTime(start.year, start.month, start.day).toIso8601String();
-    final endStr = DateTime(end.year, end.month, end.day, 23, 59, 59).toIso8601String();
+    final endStr = DateTime(end.year, end.month, end.day, 23, 59, 59, 999).toIso8601String();
 
     final result = await db.query(
       'orders',
-      where: 'DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
+      where: 'order_date >= ? AND order_date <= ?',
       whereArgs: [startStr, endStr],
       orderBy: 'created_at DESC',
     );
@@ -349,5 +349,35 @@ class OrderRepository {
       where: 'id = ?',
       whereArgs: [orderId],
     );
+  }
+
+  /// Get today's total sales (Accrual Basis)
+  Future<int> getTodaySales() async {
+    final db = await _databaseHelper.database;
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
+    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT SUM(total_price) as total FROM orders WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
+      [startOfDay, endOfDay],
+    );
+
+    return (result.first['total'] as int?) ?? 0;
+  }
+
+  /// Get this month's total sales (Accrual Basis)
+  Future<int> getThisMonthSales() async {
+    final db = await _databaseHelper.database;
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59).toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT SUM(total_price) as total FROM orders WHERE DATE(order_date) BETWEEN DATE(?) AND DATE(?)',
+      [startOfMonth, endOfMonth],
+    );
+
+    return (result.first['total'] as int?) ?? 0;
   }
 }

@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/models/purchase_order.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_state.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/currency_formatter.dart';
+import 'package:kreatif_otopart/core/utils/date_formatter.dart';
+import 'package:kreatif_otopart/data/models/purchase_order.dart';
+import 'package:kreatif_otopart/data/models/user.dart';
+import 'package:kreatif_otopart/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_otopart/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/purchase_order/purchase_order_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/purchase_order/purchase_order_state.dart';
 
 class PurchaseOrderDetailScreen extends StatelessWidget {
   final PurchaseOrder order;

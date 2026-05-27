@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_state.dart';
-import 'package:kreatif_klinik/data/models/supplier.dart';
-import 'package:kreatif_klinik/presentation/widgets/base_searchable_picker.dart';
+import 'package:kreatif_otopart/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/supplier/supplier_state.dart';
+import 'package:kreatif_otopart/data/models/supplier.dart';
+import 'package:kreatif_otopart/presentation/widgets/base_searchable_picker.dart';
 
 class SearchableSupplierPicker extends StatelessWidget {
   final Supplier? selectedSupplier;

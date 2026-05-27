@@ -1,6 +1,6 @@
-{
-    "name": "kreatif_klinik",
-    "short_name": "kreatif_klinik",
+﻿{
+    "name": "kreatif_otopart",
+    "short_name": "kreatif_otopart",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

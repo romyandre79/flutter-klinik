@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -404,7 +404,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ],
       ),
       child: Image.asset(
-        'assets/icons/logoklinik.png',
+        'assets/icons/logootopart.png',
         fit: BoxFit.contain,
       ),
     );

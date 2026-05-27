@@ -1,5 +1,5 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/product_unit.dart';
 
 enum ProductType { service, goods }
 

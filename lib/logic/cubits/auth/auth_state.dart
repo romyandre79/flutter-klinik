@@ -1,5 +1,5 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/user.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();

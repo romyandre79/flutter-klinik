@@ -1,8 +1,8 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/data/models/order.dart';
-import 'package:kreatif_klinik/data/repositories/order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/payment_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/dashboard/dashboard_state.dart';
+﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kreatif_otopart/data/models/order.dart';
+import 'package:kreatif_otopart/data/repositories/order_repository.dart';
+import 'package:kreatif_otopart/data/repositories/payment_repository.dart';
+import 'package:kreatif_otopart/logic/cubits/dashboard/dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
   final OrderRepository _orderRepository;
@@ -22,7 +22,7 @@ class DashboardCubit extends Cubit<DashboardState> {
       // Load all dashboard data in parallel
       final results = await Future.wait([
         _orderRepository.getTodayOrderCountByStatus(),
-        _paymentRepository.getTodayRevenue(),
+        _orderRepository.getTodaySales(),
         _paymentRepository.getThisMonthOrderCount(),
         _orderRepository.getRecentOrders(limit: 5),
       ]);

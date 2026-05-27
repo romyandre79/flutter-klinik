@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
 
 class CustomCard extends StatelessWidget {
   final Widget child;

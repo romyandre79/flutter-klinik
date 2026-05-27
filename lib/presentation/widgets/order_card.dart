@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/models/order.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/currency_formatter.dart';
+import 'package:kreatif_otopart/core/utils/date_formatter.dart';
+import 'package:kreatif_otopart/data/models/order.dart';
 
 class OrderCard extends StatelessWidget {
   final Order order;

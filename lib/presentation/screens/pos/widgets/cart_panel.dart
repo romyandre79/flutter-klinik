@@ -1,21 +1,22 @@
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/data/models/order_item.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/currency_formatter.dart';
+import 'package:kreatif_otopart/data/models/order_item.dart';
+import 'package:kreatif_otopart/data/models/product_unit.dart';
 
-import 'package:kreatif_klinik/data/models/payment.dart';
-import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
-import 'package:kreatif_klinik/data/models/order.dart'; 
-import 'package:kreatif_klinik/data/models/cart_item.dart';
-import 'package:kreatif_klinik/presentation/widgets/payment_dialog.dart';
-import 'package:kreatif_klinik/presentation/widgets/searchable_customer_picker.dart';
-import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
+import 'package:kreatif_otopart/data/models/payment.dart';
+import 'package:kreatif_otopart/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/order/order_state.dart';
+import 'package:kreatif_otopart/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/pos/pos_state.dart';
+import 'package:kreatif_otopart/data/models/customer.dart';
+import 'package:kreatif_otopart/data/models/order.dart'; 
+import 'package:kreatif_otopart/data/models/cart_item.dart';
+import 'package:kreatif_otopart/presentation/widgets/payment_dialog.dart';
+import 'package:kreatif_otopart/presentation/widgets/searchable_customer_picker.dart';
+import 'package:kreatif_otopart/presentation/widgets/searchable_unit_picker.dart';
 
 class CartPanel extends StatelessWidget {
   const CartPanel({super.key});
@@ -41,11 +42,14 @@ class CartPanel extends StatelessWidget {
 
       if (item.product.isGoods) {
         final currentStock = item.product.stock ?? 0;
-        if (item.quantity > currentStock) {
+        // Convert sold quantity to base unit before comparing with products.stock
+        final multiplier = item.selectedUnit?.multiplier ?? 1.0;
+        final quantityInBaseUnit = item.quantity * multiplier;
+        if (quantityInBaseUnit > currentStock) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(0)})'),
+                  'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(2)})'),
               backgroundColor: AppThemeColors.error,
             ),
           );
@@ -92,19 +96,21 @@ class CartPanel extends StatelessWidget {
         pricePerUnit: item.selectedUnit?.price ?? item.product.price,
         discount: item.discount,
         subtotal: item.subtotal,
+        note: item.note,
       );
     }).toList();
 
     context.read<OrderCubit>().createOrder(
-      customerName: posState.customerName, 
+      customerName: posState.customerName,
       customerId: posState.selectedCustomer?.id,
       customerPhone: posState.selectedCustomer?.phone,
       items: orderItems,
-      dueDate: dueDate, // Pass the selected due date
+      dueDate: dueDate,
       initialPayment: paidAmount,
       paymentMethod: paymentMethod,
       status: status,
       totalDiscount: posState.orderDiscount,
+      nomorPolisi: posState.nomorPolisi,
       createdBy: 1, // TODO: Get from AuthCubit
     );
   }
@@ -114,7 +120,10 @@ class CartPanel extends StatelessWidget {
     return BlocListener<OrderCubit, OrderState>(
       listener: (context, state) {
         if (state is OrderCreated) {
-          context.read<PosCubit>().clearCart();
+          // Clear cart then reload products so stock reflects the completed sale
+          context.read<PosCubit>()
+            ..clearCart()
+            ..loadProducts();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Penjualan ${state.order.invoiceNo} berhasil dibuat'),
@@ -141,8 +150,14 @@ class CartPanel extends StatelessWidget {
           children: [
             // Customer Selector
             const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
               child: _CustomerSelector(),
+            ),
+
+            // Nomor Polisi Input
+            const Padding(
+              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
+              child: _NomorPolisiInput(),
             ),
             
             // Header
@@ -207,7 +222,7 @@ class CartPanel extends StatelessWidget {
                               Column(
                                 children: [
                                   InkWell(
-                                    onTap: () => context.read<PosCubit>().addToCart(item.product),
+                                    onTap: () => context.read<PosCubit>().addToCart(item.product, unit: item.selectedUnit),
                                     child: const Icon(Icons.add_circle, color: AppThemeColors.primary, size: 20),
                                   ),
                                   Padding(
@@ -221,6 +236,33 @@ class CartPanel extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(width: AppSpacing.md),
+                              // Thumbnail
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppThemeColors.primarySurface.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(AppSpacing.xs),
+                                  image: item.product.imageUrl != null && File(item.product.imageUrl!).existsSync()
+                                      ? DecorationImage(
+                                          image: FileImage(File(item.product.imageUrl!)),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: item.product.imageUrl != null && File(item.product.imageUrl!).existsSync()
+                                    ? null
+                                    : Center(
+                                        child: Text(
+                                          item.product.name.isNotEmpty ? item.product.name[0].toUpperCase() : '?',
+                                          style: AppTypography.labelLarge.copyWith(
+                                            color: AppThemeColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
                               // Details
                               Expanded(
                                 child: Column(
@@ -230,16 +272,9 @@ class CartPanel extends StatelessWidget {
                                     Row(
                                       children: [
                                         Text(
-                                          CurrencyFormatter.format(item.product.price),
+                                          CurrencyFormatter.format(item.effectivePrice),
                                           style: AppTypography.bodySmall,
                                         ),
-                                        if (item.discount > 0) ...[
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '-${CurrencyFormatter.format(item.discount)}',
-                                            style: AppTypography.bodySmall.copyWith(color: AppThemeColors.error),
-                                          ),
-                                        ],
                                       ],
                                     ),
                                     // Unit Selection
@@ -267,12 +302,28 @@ class CartPanel extends StatelessWidget {
                                         ),
                                       ),
                                     ),
+                                    // KM/Hari input (only for service items)
+                                    if (item.product.isService)
+                                      InkWell(
+                                        onTap: () => _showServiceNoteDialog(context, item),
+                                        child: Text(
+                                          item.note != null && item.note!.isNotEmpty
+                                              ? item.note!
+                                              : '+ Tambah km/hari',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: item.note != null && item.note!.isNotEmpty
+                                                ? AppThemeColors.textSecondary
+                                                : AppThemeColors.primary,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
-                              // Subtotal
+                              // Gross Total
                               Text(
-                                CurrencyFormatter.format(item.subtotal),
+                                CurrencyFormatter.format(item.grossTotal),
                                 style: AppTypography.labelLarge,
                               ),
                             ],
@@ -407,12 +458,86 @@ class CartPanel extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               final val = int.tryParse(controller.text) ?? 0;
-              context.read<PosCubit>().updateItemDiscount(item.product, val);
+              context.read<PosCubit>().updateItemDiscount(item, val);
               Navigator.pop(ctx);
             },
             child: const Text('Simpan'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showServiceNoteDialog(BuildContext context, CartItem item) {
+    String selectedUnit = 'km';
+    final controller = TextEditingController();
+
+    // Parse existing note
+    if (item.note != null && item.note!.isNotEmpty) {
+      final parts = item.note!.split(' ');
+      if (parts.length == 2) {
+        controller.text = parts[0];
+        if (parts[1] == 'hari') selectedUnit = 'hari';
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text('Keterangan – ${item.product.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('KM'),
+                    selected: selectedUnit == 'km',
+                    onSelected: (_) => setDialogState(() => selectedUnit = 'km'),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ChoiceChip(
+                    label: const Text('Hari'),
+                    selected: selectedUnit == 'hari',
+                    onSelected: (_) => setDialogState(() => selectedUnit = 'hari'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: selectedUnit == 'km' ? 'Contoh: 12500' : 'Contoh: 30',
+                  suffixText: selectedUnit,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.read<PosCubit>().updateItemNote(item, null);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Hapus'),
+            ),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: () {
+                final val = controller.text.trim();
+                if (val.isNotEmpty) {
+                  context.read<PosCubit>().updateItemNote(item, '$val $selectedUnit');
+                }
+                Navigator.pop(ctx);
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -443,6 +568,49 @@ class CartPanel extends StatelessWidget {
             child: const Text('Simpan'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NomorPolisiInput extends StatefulWidget {
+  const _NomorPolisiInput();
+
+  @override
+  State<_NomorPolisiInput> createState() => _NomorPolisiInputState();
+}
+
+class _NomorPolisiInputState extends State<_NomorPolisiInput> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<PosCubit, PosState>(
+      listenWhen: (prev, curr) =>
+          curr is PosLoaded && prev is PosLoaded &&
+          curr.nomorPolisi == null && prev.nomorPolisi != null,
+      listener: (_, __) => _controller.clear(),
+      child: TextField(
+        controller: _controller,
+        textCapitalization: TextCapitalization.characters,
+        decoration: const InputDecoration(
+          hintText: 'No. Polisi (Opsional)',
+          prefixIcon: Icon(Icons.directions_car_outlined),
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+        ),
+        onChanged: (value) {
+          context.read<PosCubit>().setNomorPolisi(value.isEmpty ? null : value);
+        },
       ),
     );
   }

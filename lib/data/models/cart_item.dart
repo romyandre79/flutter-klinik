@@ -1,6 +1,6 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/product.dart';
+import 'package:kreatif_otopart/data/models/product_unit.dart';
 
 class CartItem extends Equatable {
   final Product product;
@@ -18,7 +18,10 @@ class CartItem extends Equatable {
   });
 
   int get effectivePrice => selectedUnit?.price ?? product.price;
-  int get subtotal => ((effectivePrice - discount) * quantity).round();
+  int get grossTotal => (effectivePrice * quantity).round();
+  int get subtotal {
+    return grossTotal - discount;
+  }
 
   CartItem copyWith({
     Product? product,

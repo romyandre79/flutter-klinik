@@ -1,41 +1,41 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/presentation/screens/auth/login_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/main_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/onboarding/onboarding_screen.dart';
-import 'package:kreatif_klinik/data/repositories/auth_repository.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
-import 'package:kreatif_klinik/data/repositories/order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/report_repository.dart';
-import 'package:kreatif_klinik/data/repositories/service_repository.dart';
-import 'package:kreatif_klinik/data/repositories/user_repository.dart';
-import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
-import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/data/repositories/unit_repository.dart';
-import 'package:kreatif_klinik/data/repositories/payment_repository.dart'; // Add import
-import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/core/services/notification_service.dart';
-import 'package:kreatif_klinik/data/repositories/pengumuman_template_repository.dart';
-import 'package:kreatif_klinik/data/repositories/stock_transfer_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/stock_transfer/stock_transfer_cubit.dart';
-import 'package:kreatif_klinik/core/services/sync_service.dart';
-import 'package:kreatif_klinik/logic/sync/sync_cubit.dart';
-import 'package:kreatif_klinik/core/api/api_service.dart';
-import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/date_formatter.dart';
+import 'package:kreatif_otopart/data/database/database_helper.dart';
+import 'package:kreatif_otopart/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_otopart/presentation/screens/auth/login_screen.dart';
+import 'package:kreatif_otopart/presentation/screens/main_screen.dart';
+import 'package:kreatif_otopart/presentation/screens/onboarding/onboarding_screen.dart';
+import 'package:kreatif_otopart/data/repositories/auth_repository.dart';
+import 'package:kreatif_otopart/data/repositories/customer_repository.dart';
+import 'package:kreatif_otopart/data/repositories/order_repository.dart';
+import 'package:kreatif_otopart/data/repositories/report_repository.dart';
+import 'package:kreatif_otopart/data/repositories/service_repository.dart';
+import 'package:kreatif_otopart/data/repositories/user_repository.dart';
+import 'package:kreatif_otopart/data/repositories/supplier_repository.dart';
+import 'package:kreatif_otopart/data/repositories/purchase_order_repository.dart';
+import 'package:kreatif_otopart/data/repositories/product_repository.dart';
+import 'package:kreatif_otopart/data/repositories/unit_repository.dart';
+import 'package:kreatif_otopart/data/repositories/payment_repository.dart'; // Add import
+import 'package:kreatif_otopart/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_otopart/core/services/notification_service.dart';
+import 'package:kreatif_otopart/data/repositories/pengumuman_template_repository.dart';
+import 'package:kreatif_otopart/data/repositories/stock_transfer_repository.dart';
+import 'package:kreatif_otopart/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/stock_transfer/stock_transfer_cubit.dart';
+import 'package:kreatif_otopart/core/services/sync_service.dart';
+import 'package:kreatif_otopart/logic/sync/sync_cubit.dart';
+import 'package:kreatif_otopart/core/api/api_service.dart';
+import 'package:kreatif_otopart/logic/cubits/customer/customer_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/supplier/supplier_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -149,7 +149,7 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
-          title: 'Klinik Offline',
+          title: 'Otopart Offline',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: AuthWrapper(showOnboarding: showOnboarding),
@@ -212,7 +212,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                       boxShadow: AppShadows.medium,
                     ),
                     child: Image.asset(
-                      'assets/icons/logoklinik.png',
+                      'assets/icons/logootopart.png',
                       fit: BoxFit.contain,
                     ),
                   ),

@@ -1,6 +1,6 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:kreatif_klinik/data/repositories/settings_repository.dart';
+import 'package:kreatif_otopart/data/repositories/settings_repository.dart';
 
 
 class FonnteService {

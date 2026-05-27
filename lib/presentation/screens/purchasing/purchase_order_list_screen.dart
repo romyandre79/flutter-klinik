@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_state.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/purchasing/purchase_order_create_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/purchasing/purchase_order_detail_screen.dart';
-import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
-import 'package:kreatif_klinik/data/repositories/unit_repository.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/currency_formatter.dart';
+import 'package:kreatif_otopart/core/utils/date_formatter.dart';
+import 'package:kreatif_otopart/logic/cubits/purchase_order/purchase_order_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/purchase_order/purchase_order_state.dart';
+import 'package:kreatif_otopart/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_otopart/presentation/screens/purchasing/purchase_order_create_screen.dart';
+import 'package:kreatif_otopart/presentation/screens/purchasing/purchase_order_detail_screen.dart';
+import 'package:kreatif_otopart/data/repositories/purchase_order_repository.dart';
+import 'package:kreatif_otopart/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_otopart/data/repositories/product_repository.dart';
+import 'package:kreatif_otopart/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_otopart/data/repositories/unit_repository.dart';
 
 class PurchaseOrderListScreen extends StatefulWidget {
   const PurchaseOrderListScreen({super.key});
@@ -51,7 +51,7 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
             // or pass the existing one if we can find it. 
             // MainScreen doesn't seem to expose ProductCubit globally (only inside tabs).
             // So we create a new one or use BlocProvider.value if we are in scope.
-            // Dashboard has OrderCubit. Klinik has PosCubit. Settings has UserCubit.
+            // Dashboard has OrderCubit. Otopart has PosCubit. Settings has UserCubit.
             // ProductListScreen has ProductCubit.
             // So here we validly create a new one using the repository.
             final productRepo = context.read<ProductRepository>();

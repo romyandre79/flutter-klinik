@@ -2,13 +2,13 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
-import 'package:kreatif_klinik/core/utils/password_helper.dart';
+import 'package:kreatif_otopart/core/constants/app_constants.dart';
+import 'package:kreatif_otopart/core/utils/password_helper.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int _currentVersion = 11;
+  static const int _currentVersion = 13;
 
   DatabaseHelper._init();
 
@@ -139,6 +139,7 @@ class DatabaseHelper {
         total_discount INTEGER DEFAULT 0,
         paid INTEGER DEFAULT 0,
         notes TEXT,
+        nomor_polisi TEXT,
         created_by INTEGER,
         is_synced INTEGER DEFAULT 0,
         server_id INTEGER,
@@ -163,6 +164,7 @@ class DatabaseHelper {
         subtotal INTEGER NOT NULL,
         product_id INTEGER,
         unit_id INTEGER,
+        note TEXT,
         FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
         FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL,
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
@@ -784,6 +786,13 @@ class DatabaseHelper {
 
       // Add unit_id to order_items
       await db.execute('ALTER TABLE order_items ADD COLUMN unit_id INTEGER');
+    }
+
+    if (oldVersion < 13) {
+      // Add nomor_polisi to orders
+      await db.execute('ALTER TABLE orders ADD COLUMN nomor_polisi TEXT');
+      // Add note to order_items
+      await db.execute('ALTER TABLE order_items ADD COLUMN note TEXT');
     }
 
     if (oldVersion < 12) {

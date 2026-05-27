@@ -1,10 +1,10 @@
-# Project-level configuration.
+﻿# Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(kreatif_klinik LANGUAGES CXX)
+project(kreatif_otopart LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "kreatif_klinik")
+set(BINARY_NAME "kreatif_otopart")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

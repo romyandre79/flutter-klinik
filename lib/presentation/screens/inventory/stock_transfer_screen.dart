@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/models/stock_transfer.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_state.dart';
-import 'package:kreatif_klinik/logic/cubits/stock_transfer/stock_transfer_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/stock_transfer/stock_transfer_state.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/date_formatter.dart';
+import 'package:kreatif_otopart/data/models/product.dart';
+import 'package:kreatif_otopart/data/models/stock_transfer.dart';
+import 'package:kreatif_otopart/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/product/product_state.dart';
+import 'package:kreatif_otopart/logic/cubits/stock_transfer/stock_transfer_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/stock_transfer/stock_transfer_state.dart';
 
 class StockTransferScreen extends StatefulWidget {
   const StockTransferScreen({super.key});

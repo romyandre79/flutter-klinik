@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:image_picker/image_picker.dart';
@@ -6,17 +6,17 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/data/models/unit.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_state.dart';
-import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/data/models/product.dart';
+import 'package:kreatif_otopart/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_otopart/data/models/user.dart';
+import 'package:kreatif_otopart/data/models/unit.dart';
+import 'package:kreatif_otopart/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/unit/unit_state.dart';
+import 'package:kreatif_otopart/presentation/widgets/searchable_unit_picker.dart';
+import 'package:kreatif_otopart/data/models/product_unit.dart';
 
 
 class ProductFormScreen extends StatefulWidget {

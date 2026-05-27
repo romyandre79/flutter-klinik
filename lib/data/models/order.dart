@@ -1,6 +1,6 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/order_item.dart';
-import 'package:kreatif_klinik/data/models/payment.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/order_item.dart';
+import 'package:kreatif_otopart/data/models/payment.dart';
 
 enum OrderStatus { pending, process, ready, done }
 
@@ -75,6 +75,7 @@ class Order extends Equatable {
   final int totalDiscount;
   final int paid;
   final String? notes;
+  final String? nomorPolisi;
   final int? createdBy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -100,6 +101,7 @@ class Order extends Equatable {
     this.totalDiscount = 0,
     this.paid = 0,
     this.notes,
+    this.nomorPolisi,
     this.createdBy,
     this.createdAt,
     this.updatedAt,
@@ -125,6 +127,7 @@ class Order extends Equatable {
       'total_discount': totalDiscount,
       'paid': paid,
       'notes': notes,
+      'nomor_polisi': nomorPolisi,
       'created_by': createdBy,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
@@ -151,6 +154,7 @@ class Order extends Equatable {
       totalDiscount: (map['total_discount'] as int?) ?? 0,
       paid: (map['paid'] as int?) ?? 0,
       notes: map['notes'] as String?,
+      nomorPolisi: map['nomor_polisi'] as String?,
       createdBy: map['created_by'] as int?,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
@@ -178,6 +182,7 @@ class Order extends Equatable {
     int? totalDiscount,
     int? paid,
     String? notes,
+    String? nomorPolisi,
     int? createdBy,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -201,6 +206,7 @@ class Order extends Equatable {
       totalDiscount: totalDiscount ?? this.totalDiscount,
       paid: paid ?? this.paid,
       notes: notes ?? this.notes,
+      nomorPolisi: nomorPolisi ?? this.nomorPolisi,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -212,13 +218,14 @@ class Order extends Equatable {
   }
 
   // Helper methods
-  int get remainingPayment => totalPrice - paid;
+  int get remainingPayment => (totalPrice - paid).clamp(0, 999999999);
+  int get change => (paid - totalPrice).clamp(0, 999999999);
   bool get isPaid => paid >= totalPrice;
   bool get hasDeposit => paid > 0 && paid < totalPrice;
 
   // Aliases for printer service
   String get invoiceNumber => invoiceNo;
-  int get subtotal => totalPrice;
+  int get subtotal => totalPrice + totalDiscount;
   int get discount => totalDiscount;
   int get totalAmount => totalPrice;
   int get paidAmount => paid;
@@ -273,6 +280,7 @@ class Order extends Equatable {
         totalDiscount,
         paid,
         notes,
+        nomorPolisi,
         createdBy,
         createdAt,
         updatedAt,

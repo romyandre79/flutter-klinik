@@ -1,5 +1,5 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/supplier.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/supplier.dart';
 
 abstract class SupplierState extends Equatable {
   const SupplierState();

@@ -1,7 +1,7 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/cart_item.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/cart_item.dart';
+import 'package:kreatif_otopart/data/models/product.dart';
+import 'package:kreatif_otopart/data/models/customer.dart';
 
 abstract class PosState extends Equatable {
   const PosState();
@@ -23,6 +23,7 @@ class PosLoaded extends PosState {
   final Customer? selectedCustomer;
   final String customerName;
   final int orderDiscount;
+  final String? nomorPolisi;
 
   const PosLoaded({
     this.products = const [],
@@ -33,13 +34,17 @@ class PosLoaded extends PosState {
     this.selectedCustomer,
     this.customerName = 'Walk-in Customer',
     this.orderDiscount = 0,
+    this.nomorPolisi,
   });
 
-  int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.product.price * item.quantity).round());
+  int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.effectivePrice * item.quantity).round());
   int get totalItems => cartItems.fold(0, (sum, item) => sum + item.quantity.round());
-  int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + (item.discount * item.quantity).round());
+  int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + item.discount);
   int get totalDiscount => totalItemDiscount + orderDiscount;
   int get grandTotal => totalAmount - totalDiscount;
+
+  // Sentinel so callers can explicitly pass null to clear selectedCustomer or nomorPolisi.
+  static const _absent = Object();
 
   PosLoaded copyWith({
     List<Product>? products,
@@ -47,9 +52,10 @@ class PosLoaded extends PosState {
     List<CartItem>? cartItems,
     String? selectedCategory,
     String? searchQuery,
-    Customer? selectedCustomer,
+    Object? selectedCustomer = _absent,
     String? customerName,
     int? orderDiscount,
+    Object? nomorPolisi = _absent,
   }) {
     return PosLoaded(
       products: products ?? this.products,
@@ -57,9 +63,14 @@ class PosLoaded extends PosState {
       cartItems: cartItems ?? this.cartItems,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedCustomer: selectedCustomer ?? this.selectedCustomer,
+      selectedCustomer: selectedCustomer == _absent
+          ? this.selectedCustomer
+          : selectedCustomer as Customer?,
       customerName: customerName ?? this.customerName,
       orderDiscount: orderDiscount ?? this.orderDiscount,
+      nomorPolisi: nomorPolisi == _absent
+          ? this.nomorPolisi
+          : nomorPolisi as String?,
     );
   }
 
@@ -73,6 +84,7 @@ class PosLoaded extends PosState {
         selectedCustomer,
         customerName,
         orderDiscount,
+        nomorPolisi,
       ];
 }
 

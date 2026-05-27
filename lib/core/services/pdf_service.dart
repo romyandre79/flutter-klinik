@@ -1,9 +1,9 @@
-import 'dart:io';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/models/order.dart';
-import 'package:kreatif_klinik/data/repositories/settings_repository.dart';
+﻿import 'dart:io';
+import 'package:kreatif_otopart/core/constants/app_constants.dart';
+import 'package:kreatif_otopart/core/utils/currency_formatter.dart';
+import 'package:kreatif_otopart/core/utils/date_formatter.dart';
+import 'package:kreatif_otopart/data/models/order.dart';
+import 'package:kreatif_otopart/data/repositories/settings_repository.dart';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -24,7 +24,7 @@ class PdfService {
     final storePhone = settings[AppConstants.keyStorePhone] ?? AppConstants.defaultStorePhone;
 
     // Load logo if available (optional, for now use text)
-    // final logo = await rootBundle.load('assets/icons/logoklinik.png');
+    // final logo = await rootBundle.load('assets/icons/logootopart.png');
     // final image = pw.MemoryImage(logo.buffer.asUint8List());
 
     pdf.addPage(

@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/data/models/service.dart';
-import 'package:kreatif_klinik/logic/cubits/service/service_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/service/service_state.dart';
-import 'package:kreatif_klinik/presentation/screens/services/service_form_screen.dart';
+import 'package:kreatif_otopart/core/theme/app_theme.dart';
+import 'package:kreatif_otopart/core/utils/currency_formatter.dart';
+import 'package:kreatif_otopart/data/models/service.dart';
+import 'package:kreatif_otopart/logic/cubits/service/service_cubit.dart';
+import 'package:kreatif_otopart/logic/cubits/service/service_state.dart';
+import 'package:kreatif_otopart/presentation/screens/services/service_form_screen.dart';
 
 class ServiceListScreen extends StatefulWidget {
   const ServiceListScreen({super.key});

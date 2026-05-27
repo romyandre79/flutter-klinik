@@ -1,5 +1,5 @@
-import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/purchase_order.dart';
+﻿import 'package:equatable/equatable.dart';
+import 'package:kreatif_otopart/data/models/purchase_order.dart';
 
 abstract class PurchaseOrderState extends Equatable {
   const PurchaseOrderState();

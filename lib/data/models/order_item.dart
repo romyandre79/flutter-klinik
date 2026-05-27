@@ -12,6 +12,7 @@ class OrderItem extends Equatable {
   final int discount;
   final int subtotal;
   final int? unitId; // New field for multi-unit stock tracking
+  final String? note; // Keterangan jasa (contoh: "12.500 km" atau "30 hari")
 
   const OrderItem({
     this.id,
@@ -25,6 +26,7 @@ class OrderItem extends Equatable {
     this.discount = 0,
     required this.subtotal,
     this.unitId,
+    this.note,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,6 +42,7 @@ class OrderItem extends Equatable {
       'discount': discount,
       'subtotal': subtotal,
       'unit_id': unitId,
+      'note': note,
     };
   }
 
@@ -56,6 +59,7 @@ class OrderItem extends Equatable {
       discount: (map['discount'] as int?) ?? 0,
       subtotal: map['subtotal'] as int,
       unitId: map['unit_id'] as int?,
+      note: map['note'] as String?,
     );
   }
 
@@ -71,6 +75,7 @@ class OrderItem extends Equatable {
     int? discount,
     int? subtotal,
     int? unitId,
+    String? note,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -84,13 +89,16 @@ class OrderItem extends Equatable {
       discount: discount ?? this.discount,
       subtotal: subtotal ?? this.subtotal,
       unitId: unitId ?? this.unitId,
+      note: note ?? this.note,
     );
   }
 
   // Helper: Calculate subtotal from quantity and price
   static int calculateSubtotal(double quantity, int pricePerUnit, int discount) {
-    return ((pricePerUnit - discount) * quantity).round();
+    return (pricePerUnit * quantity).round() - discount;
   }
+
+  int get grossSubtotal => (pricePerUnit * quantity).round();
 
   @override
   List<Object?> get props => [
@@ -105,5 +113,6 @@ class OrderItem extends Equatable {
         discount,
         subtotal,
         unitId,
+        note,
       ];
 }

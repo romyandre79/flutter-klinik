@@ -8,6 +8,15 @@ if "%PLATFORM%"=="" (
     exit /b 1
 )
 
+echo ==========================================
+echo Running Build Configurator...
+echo ==========================================
+call dart run scripts/configure_build.dart
+if %ERRORLEVEL% neq 0 (
+    echo Configuration failed!
+    exit /b %ERRORLEVEL%
+)
+
 echo.
 echo ==========================================
 echo [1/4] Cleaning Project...
@@ -48,6 +57,12 @@ if /i "%PLATFORM%"=="apk" (
     echo Supported: apk, windows, all
     exit /b 1
 )
+
+echo.
+echo ==========================================
+echo Copying Build Outputs...
+echo ==========================================
+call dart run scripts/configure_build.dart --copy %PLATFORM%
 
 echo.
 echo ==========================================

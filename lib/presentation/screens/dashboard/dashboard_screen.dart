@@ -27,7 +27,7 @@ import 'package:kreatif_klinik/presentation/screens/pengumuman/pengumuman_screen
 import 'package:kreatif_klinik/presentation/screens/reminder/reminder_screen.dart';
 import 'package:kreatif_klinik/presentation/screens/inventory/stock_transfer_screen.dart';
 import 'package:kreatif_klinik/presentation/screens/inventory/unit_conversion_screen.dart';
-import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_klinik/presentation/screens/registration/registration_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int index)? onSwitchTab;
@@ -486,6 +486,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
             ),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildQuickActionItem(
                 icon: Icons.swap_horiz,
@@ -512,6 +513,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => const UnitConversionScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickActionItem(
+                icon: Icons.assignment_ind,
+                label: 'Pendaftaran',
+                color: Colors.teal,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegistrationListScreen(filterActive: false),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _buildQuickActionItem(
+                icon: Icons.fact_check,
+                label: 'Pemeriksaan',
+                color: Colors.indigo,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegistrationListScreen(filterActive: true),
                     ),
                   );
                 },

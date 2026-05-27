@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
 import 'package:kreatif_klinik/core/api/api_service.dart';
 import 'package:kreatif_klinik/core/services/log_service.dart';
 import 'package:kreatif_klinik/core/services/session_service.dart';
@@ -50,6 +50,14 @@ class SyncService {
 
     final db = await _dbHelper.database;
     
+    // Fetch branch info from settings
+    final settingsResult = await db.query('app_settings');
+    final settings = Map.fromEntries(
+      settingsResult.map((e) => MapEntry(e['key'] as String, e['value'] as String)),
+    );
+    final branchId = settings[AppConstants.keyBranchId] ?? '';
+    final branchCode = settings[AppConstants.keyBranchCode] ?? '';
+
     final List<Map<String, dynamic>> maps = await db.query(
       'orders',
       where: 'is_synced = ?',
@@ -73,6 +81,8 @@ class SyncService {
         
         final payload = order.toMap();
         payload['items'] = items.map((e) => e.toMap()).toList();
+        payload['branch_id'] = branchId;
+        payload['branch_code'] = branchCode;
         
         final response = await _apiService.executeFlow('pos_sync_orders', 'pos', payload);
         

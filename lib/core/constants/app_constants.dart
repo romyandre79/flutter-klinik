@@ -8,7 +8,7 @@ class AppConstants {
 
   // Database
   static const String databaseName = 'kreatif_klinik.db';
-  static const int databaseVersion = 12;
+  static const int databaseVersion = 13;
 
   // Invoice
   static const String defaultInvoicePrefix = 'Klinik';
@@ -50,11 +50,19 @@ class AppConstants {
   static const String keyPrinterAddress = 'printer_address';
   static const String keyLastInvoiceDate = 'last_invoice_date';
   static const String keyLastInvoiceNumber = 'last_invoice_number';
+  static const String keyBranchId = 'branch_id';
+  static const String keyBranchCode = 'branch_code';
+  static const String keyCustomerName = 'customer_name';
+  static const String keyCustomerWa = 'customer_wa';
 
   // Default Store Info
-  static const String defaultStoreName = 'Toko Serba Ada';
-  static const String defaultStoreAddress = 'Indonesia';
-  static const String defaultStorePhone = '-';
+  static const String defaultStoreName = 'Apotek cahaya';
+  static const String defaultStoreAddress = 'jl Harapan Raya no 142 Pekanbaru';
+  static const String defaultStorePhone = '+62 821-7003-394';
+  static const String defaultBranchId = '1';
+  static const String defaultBranchCode = 'Cabang Pekanbaru';
+  static const String defaultCustomerName = 'Johannes Parulian Sidabutar';
+  static const String defaultCustomerWa = '082247885833';
 
-  static const bool isDemoMode = true;
+  static const bool isDemoMode = false;
 }

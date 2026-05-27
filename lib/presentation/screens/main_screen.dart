@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_pos/core/theme/app_theme.dart';
 import 'package:kreatif_pos/data/models/user.dart';
@@ -157,7 +157,7 @@ class _MainScreenState extends State<MainScreen> {
 
         if (isOwner || user.role == UserRole.kasir) {
           if (isLargeScreen) {
-            // Add Klinik Screen for large screens
+            // Add Otopart Screen for large screens
             // Initialize PosCubit if not already done
             _posCubit ??= PosCubit(context.read<ProductRepository>())..loadProducts();
             
@@ -259,7 +259,7 @@ class _MainScreenState extends State<MainScreen> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() => _currentIndex = index);
-                    // If switching to Klinik (Kasir) tab, reload products
+                    // If switching to Otopart (Kasir) tab, reload products
                     if (item.label == 'Kasir') {
                       _posCubit?.loadProducts();
                     } else if (item.label == 'Dashboard') {

@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -90,6 +90,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => PengumumanTemplateRepository()),
         RepositoryProvider(create: (_) => StockTransferRepository()),
         RepositoryProvider(create: (_) => UnitRepository()),
+        RepositoryProvider(create: (_) => DoctorRepository()),
+        RepositoryProvider(create: (_) => RegistrationRepository()),
+        RepositoryProvider(create: (_) => ExaminationRepository()),
         RepositoryProvider(
           create: (context) => SyncService(
             apiService: ApiService(),
@@ -147,9 +150,19 @@ class MyApp extends StatelessWidget {
               supplierRepository: context.read<SupplierRepository>(),
             )..loadSuppliers(),
           ),
+          BlocProvider(
+            create: (context) => DoctorCubit(
+              context.read<DoctorRepository>(),
+            )..loadDoctors(),
+          ),
+          BlocProvider(
+            create: (context) => RegistrationCubit(
+              context.read<RegistrationRepository>(),
+            )..loadRegistrations(),
+          ),
         ],
         child: MaterialApp(
-          title: 'Klinik Offline',
+          title: 'Otopart Offline',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: AuthWrapper(showOnboarding: showOnboarding),

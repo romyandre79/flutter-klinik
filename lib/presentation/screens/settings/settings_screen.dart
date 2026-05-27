@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:kreatif_pos/core/constants/app_constants.dart';
@@ -664,6 +665,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   );
                                 },
                               ),
+                              if (user != null) _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.medical_services_outlined,
+                                title: 'Master Dokter',
+                                subtitle: 'Kelola data dokter klinik',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const DoctorListScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ),
 
@@ -787,8 +803,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     context: context,
                                     icon: isLoading ? Icons.sync : Icons.cloud_sync,
                                     title: 'Sinkronisasi Data',
-                                    subtitle: isLoading 
-                                        ? (state as SyncLoading).message 
+                                    subtitle: state is SyncLoading
+                                        ? state.message
                                         : 'Upload transaksi & download master data',
                                     onTap: isLoading ? null : () => context.read<SyncCubit>().syncData(),
                                     trailing: isLoading 
@@ -1263,6 +1279,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VoidCallback? onTap,
     bool showArrow = true,
     Widget? trailing,
+    bool locked = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1299,6 +1316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title,
                       style: AppTypography.titleSmall.copyWith(
                         fontWeight: FontWeight.w500,
+                        color: locked ? AppThemeColors.textSecondary : null,
                       ),
                     ),
                     Text(
@@ -1317,8 +1335,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: AppSpacing.md),
                 trailing,
               ],
+              // Lock icon when locked
+              if (locked)
+                const Icon(
+                  Icons.lock_outline,
+                  color: AppThemeColors.textSecondary,
+                  size: 14,
+                ),
               // Arrow or edit icon
-              if (showArrow && onTap != null && trailing == null)
+              if (!locked && showArrow && onTap != null && trailing == null)
                 Container(
                   width: 28,
                   height: 28,

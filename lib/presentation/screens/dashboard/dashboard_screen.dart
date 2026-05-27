@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_pos/core/theme/app_theme.dart';
 import 'package:kreatif_pos/core/utils/currency_formatter.dart';
@@ -486,6 +486,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
             ),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildQuickActionItem(
                 icon: Icons.swap_horiz,
@@ -512,6 +513,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => const UnitConversionScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickActionItem(
+                icon: Icons.assignment_ind,
+                label: 'Pendaftaran',
+                color: Colors.teal,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegistrationListScreen(filterActive: false),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _buildQuickActionItem(
+                icon: Icons.fact_check,
+                label: 'Pemeriksaan',
+                color: Colors.indigo,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegistrationListScreen(filterActive: true),
                     ),
                   );
                 },

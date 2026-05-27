@@ -4,19 +4,19 @@ class AppConstants {
   // App Info
   static const String appName = 'Kreatif - POS Offline';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Aplikasi Kasir Klinik Offline - Full Offline, Jalan Tanpa Internet!';
+  static const String appDescription = 'Aplikasi Kasir Otopart Offline - Full Offline, Jalan Tanpa Internet!';
 
   // Database
   static const String databaseName = 'kreatif_pos.db';
   static const int databaseVersion = 12;
 
   // Invoice
-  static const String defaultInvoicePrefix = 'Klinik';
+  static const String defaultInvoicePrefix = 'Otopart';
   static const int invoiceNumberLength = 6;
 
   // Default Values
   static const String defaultPaymentMethod = 'cash';
-  static const int defaultServiceDuration = 1; // Klinik usually instant, but keep for compatibility
+  static const int defaultServiceDuration = 1; // Otopart usually instant, but keep for compatibility
   static const int defaultPageSize = 20;
   static const int recentOrdersLimit = 5;
 
@@ -63,6 +63,11 @@ class AppConstants {
   static const String defaultBranchCode = '';
   static const String defaultCustomerName = '';
   static const String defaultCustomerWa = '';
+  static const String defaultBranchId = '';
+  static const String defaultBranchCode = '';
+  static const String defaultCustomerName = '';
+  static const String defaultCustomerWa = '';
 
+  static const bool isDemoMode = bool.fromEnvironment('DEMO', defaultValue: true);
   static const bool isDemoMode = bool.fromEnvironment('DEMO', defaultValue: true);
 }

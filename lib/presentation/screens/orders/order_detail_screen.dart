@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_pos/core/theme/app_theme.dart';
@@ -1026,6 +1026,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           style: AppTypography.bodySmall.copyWith(
                             color: AppThemeColors.textSecondary,
                           ),
+                        ),
+                      if (order.nomorPolisi != null)
+                        Row(
+                          children: [
+                            const Icon(Icons.directions_car_outlined, size: 12, color: AppThemeColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              order.nomorPolisi!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppThemeColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),

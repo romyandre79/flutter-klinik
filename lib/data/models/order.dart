@@ -75,6 +75,7 @@ class Order extends Equatable {
   final int totalDiscount;
   final int paid;
   final String? notes;
+  final String? nomorPolisi;
   final int? createdBy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -100,6 +101,7 @@ class Order extends Equatable {
     this.totalDiscount = 0,
     this.paid = 0,
     this.notes,
+    this.nomorPolisi,
     this.createdBy,
     this.createdAt,
     this.updatedAt,
@@ -125,6 +127,7 @@ class Order extends Equatable {
       'total_discount': totalDiscount,
       'paid': paid,
       'notes': notes,
+      'nomor_polisi': nomorPolisi,
       'created_by': createdBy,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
@@ -151,6 +154,7 @@ class Order extends Equatable {
       totalDiscount: (map['total_discount'] as int?) ?? 0,
       paid: (map['paid'] as int?) ?? 0,
       notes: map['notes'] as String?,
+      nomorPolisi: map['nomor_polisi'] as String?,
       createdBy: map['created_by'] as int?,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
@@ -178,6 +182,7 @@ class Order extends Equatable {
     int? totalDiscount,
     int? paid,
     String? notes,
+    String? nomorPolisi,
     int? createdBy,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -201,6 +206,7 @@ class Order extends Equatable {
       totalDiscount: totalDiscount ?? this.totalDiscount,
       paid: paid ?? this.paid,
       notes: notes ?? this.notes,
+      nomorPolisi: nomorPolisi ?? this.nomorPolisi,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -274,6 +280,7 @@ class Order extends Equatable {
         totalDiscount,
         paid,
         notes,
+        nomorPolisi,
         createdBy,
         createdAt,
         updatedAt,

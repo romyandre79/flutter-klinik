@@ -23,6 +23,7 @@ class PosLoaded extends PosState {
   final Customer? selectedCustomer;
   final String customerName;
   final int orderDiscount;
+  final String? nomorPolisi;
 
   const PosLoaded({
     this.products = const [],
@@ -33,6 +34,7 @@ class PosLoaded extends PosState {
     this.selectedCustomer,
     this.customerName = 'Walk-in Customer',
     this.orderDiscount = 0,
+    this.nomorPolisi,
   });
 
   int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.effectivePrice * item.quantity).round());
@@ -53,6 +55,7 @@ class PosLoaded extends PosState {
     Object? selectedCustomer = _absent,
     String? customerName,
     int? orderDiscount,
+    Object? nomorPolisi = _absent,
   }) {
     return PosLoaded(
       products: products ?? this.products,
@@ -65,6 +68,9 @@ class PosLoaded extends PosState {
           : selectedCustomer as Customer?,
       customerName: customerName ?? this.customerName,
       orderDiscount: orderDiscount ?? this.orderDiscount,
+      nomorPolisi: nomorPolisi == _absent
+          ? this.nomorPolisi
+          : nomorPolisi as String?,
     );
   }
 
@@ -78,6 +84,7 @@ class PosLoaded extends PosState {
         selectedCustomer,
         customerName,
         orderDiscount,
+        nomorPolisi,
       ];
 }
 

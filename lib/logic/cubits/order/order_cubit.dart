@@ -82,8 +82,9 @@ class OrderCubit extends Cubit<OrderState> {
     String? customerPhone,
     int? customerId,
     required List<OrderItem> items,
-    DateTime? dueDate, // Changed to nullable
+    DateTime? dueDate,
     String? notes,
+    String? nomorPolisi,
     int? createdBy,
     int initialPayment = 0,
     PaymentMethod paymentMethod = PaymentMethod.cash,
@@ -165,6 +166,7 @@ class OrderCubit extends Cubit<OrderState> {
         totalDiscount: combinedDiscount,
         paid: paidAmount,
         notes: notes?.trim(),
+        nomorPolisi: nomorPolisi?.trim().isEmpty == true ? null : nomorPolisi?.trim(),
         createdBy: createdBy,
       );
 

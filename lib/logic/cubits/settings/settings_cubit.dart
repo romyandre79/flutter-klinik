@@ -15,9 +15,50 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   Future<void> loadSettings() async {
     emit(SettingsLoading());
-
     try {
-      final settings = await _repository.getAllSettings();
+      final results = await Future.wait([
+        _repository.getAllSettings(),
+        DeviceService.getDeviceId(),
+      ]);
+
+      var settings = results[0] as Map<String, String>;
+      final deviceId = results[1] as String;
+
+      // In production (non-demo mode), we enforce and update the static constants in the database
+      if (!AppConstants.isDemoMode) {
+        bool needsUpdate = false;
+        if (settings[AppConstants.keyStoreName] != AppConstants.defaultStoreName) {
+          await _repository.setSetting(AppConstants.keyStoreName, AppConstants.defaultStoreName);
+          needsUpdate = true;
+        }
+        if (settings[AppConstants.keyStoreAddress] != AppConstants.defaultStoreAddress) {
+          await _repository.setSetting(AppConstants.keyStoreAddress, AppConstants.defaultStoreAddress);
+          needsUpdate = true;
+        }
+        if (settings[AppConstants.keyStorePhone] != AppConstants.defaultStorePhone) {
+          await _repository.setSetting(AppConstants.keyStorePhone, AppConstants.defaultStorePhone);
+          needsUpdate = true;
+        }
+        if (settings[AppConstants.keyBranchId] != AppConstants.defaultBranchId) {
+          await _repository.setSetting(AppConstants.keyBranchId, AppConstants.defaultBranchId);
+          needsUpdate = true;
+        }
+        if (settings[AppConstants.keyBranchCode] != AppConstants.defaultBranchCode) {
+          await _repository.setSetting(AppConstants.keyBranchCode, AppConstants.defaultBranchCode);
+          needsUpdate = true;
+        }
+        if (settings[AppConstants.keyCustomerName] != AppConstants.defaultCustomerName) {
+          await _repository.setSetting(AppConstants.keyCustomerName, AppConstants.defaultCustomerName);
+          needsUpdate = true;
+        }
+        if (settings[AppConstants.keyCustomerWa] != AppConstants.defaultCustomerWa) {
+          await _repository.setSetting(AppConstants.keyCustomerWa, AppConstants.defaultCustomerWa);
+          needsUpdate = true;
+        }
+        if (needsUpdate) {
+          settings = await _repository.getAllSettings();
+        }
+      }
 
       final storeInfo = StoreInfo(
         name: settings[AppConstants.keyStoreName] ??
@@ -29,6 +70,11 @@ class SettingsCubit extends Cubit<SettingsState> {
         invoicePrefix: settings[AppConstants.keyInvoicePrefix] ??
             AppConstants.defaultInvoicePrefix,
         fonnteToken: settings['fonnte_token'] ?? '',
+        deviceId: deviceId,
+        branchId: settings[AppConstants.keyBranchId] ?? AppConstants.defaultBranchId,
+        branchCode: settings[AppConstants.keyBranchCode] ?? AppConstants.defaultBranchCode,
+        customerName: settings[AppConstants.keyCustomerName] ?? AppConstants.defaultCustomerName,
+        customerWa: settings[AppConstants.keyCustomerWa] ?? AppConstants.defaultCustomerWa,
       );
 
       _currentInfo = storeInfo;

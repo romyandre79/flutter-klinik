@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_pos/core/theme/app_theme.dart';
 import 'package:kreatif_pos/core/utils/currency_formatter.dart';
@@ -51,7 +51,7 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
             // or pass the existing one if we can find it. 
             // MainScreen doesn't seem to expose ProductCubit globally (only inside tabs).
             // So we create a new one or use BlocProvider.value if we are in scope.
-            // Dashboard has OrderCubit. Klinik has PosCubit. Settings has UserCubit.
+            // Dashboard has OrderCubit. Otopart has PosCubit. Settings has UserCubit.
             // ProductListScreen has ProductCubit.
             // So here we validly create a new one using the repository.
             final productRepo = context.read<ProductRepository>();

@@ -83,6 +83,8 @@ class SyncService {
         payload['items'] = items.map((e) => e.toMap()).toList();
         payload['branch_id'] = branchId;
         payload['branch_code'] = branchCode;
+        payload['branch_id'] = branchId;
+        payload['branch_code'] = branchCode;
         
         final response = await _apiService.executeFlow('pos_sync_orders', 'pos', payload);
         

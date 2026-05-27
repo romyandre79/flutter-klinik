@@ -1,10 +1,10 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-**Kreatif Otopart** is an offline-first clinic POS and management system built with Flutter. It supports Android, iOS, macOS, Windows, and web with background data synchronization to a remote API.
+**Kreatif Klinik** is an offline-first clinic POS and management system built with Flutter. It supports Android, iOS, macOS, Windows, and web with background data synchronization to a remote API.
 
 ## Commands
 

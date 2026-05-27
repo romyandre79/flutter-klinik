@@ -90,6 +90,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => PengumumanTemplateRepository()),
         RepositoryProvider(create: (_) => StockTransferRepository()),
         RepositoryProvider(create: (_) => UnitRepository()),
+        RepositoryProvider(create: (_) => DoctorRepository()),
+        RepositoryProvider(create: (_) => RegistrationRepository()),
+        RepositoryProvider(create: (_) => ExaminationRepository()),
         RepositoryProvider(
           create: (context) => SyncService(
             apiService: ApiService(),
@@ -146,6 +149,16 @@ class MyApp extends StatelessWidget {
             create: (context) => SupplierCubit(
               supplierRepository: context.read<SupplierRepository>(),
             )..loadSuppliers(),
+          ),
+          BlocProvider(
+            create: (context) => DoctorCubit(
+              context.read<DoctorRepository>(),
+            )..loadDoctors(),
+          ),
+          BlocProvider(
+            create: (context) => RegistrationCubit(
+              context.read<RegistrationRepository>(),
+            )..loadRegistrations(),
           ),
         ],
         child: MaterialApp(

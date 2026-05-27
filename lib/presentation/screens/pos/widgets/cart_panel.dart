@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_otopart/core/theme/app_theme.dart';
@@ -46,9 +47,14 @@ class CartPanel extends StatelessWidget {
         final multiplier = item.selectedUnit?.multiplier ?? 1.0;
         final quantityInBaseUnit = item.quantity * multiplier;
         if (quantityInBaseUnit > currentStock) {
+        // Convert sold quantity to base unit before comparing with products.stock
+        final multiplier = item.selectedUnit?.multiplier ?? 1.0;
+        final quantityInBaseUnit = item.quantity * multiplier;
+        if (quantityInBaseUnit > currentStock) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
+                  'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(2)})'),
                   'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(2)})'),
               backgroundColor: AppThemeColors.error,
             ),
@@ -120,6 +126,10 @@ class CartPanel extends StatelessWidget {
     return BlocListener<OrderCubit, OrderState>(
       listener: (context, state) {
         if (state is OrderCreated) {
+          // Clear cart then reload products so stock reflects the completed sale
+          context.read<PosCubit>()
+            ..clearCart()
+            ..loadProducts();
           // Clear cart then reload products so stock reflects the completed sale
           context.read<PosCubit>()
             ..clearCart()
@@ -223,6 +233,7 @@ class CartPanel extends StatelessWidget {
                                 children: [
                                   InkWell(
                                     onTap: () => context.read<PosCubit>().addToCart(item.product, unit: item.selectedUnit),
+                                    onTap: () => context.read<PosCubit>().addToCart(item.product, unit: item.selectedUnit),
                                     child: const Icon(Icons.add_circle, color: AppThemeColors.primary, size: 20),
                                   ),
                                   Padding(
@@ -263,6 +274,33 @@ class CartPanel extends StatelessWidget {
                                       ),
                               ),
                               const SizedBox(width: AppSpacing.md),
+                              // Thumbnail
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppThemeColors.primarySurface.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(AppSpacing.xs),
+                                  image: item.product.imageUrl != null && File(item.product.imageUrl!).existsSync()
+                                      ? DecorationImage(
+                                          image: FileImage(File(item.product.imageUrl!)),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: item.product.imageUrl != null && File(item.product.imageUrl!).existsSync()
+                                    ? null
+                                    : Center(
+                                        child: Text(
+                                          item.product.name.isNotEmpty ? item.product.name[0].toUpperCase() : '?',
+                                          style: AppTypography.labelLarge.copyWith(
+                                            color: AppThemeColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
                               // Details
                               Expanded(
                                 child: Column(
@@ -272,6 +310,7 @@ class CartPanel extends StatelessWidget {
                                     Row(
                                       children: [
                                         Text(
+                                          CurrencyFormatter.format(item.effectivePrice),
                                           CurrencyFormatter.format(item.effectivePrice),
                                           style: AppTypography.bodySmall,
                                         ),
@@ -322,7 +361,9 @@ class CartPanel extends StatelessWidget {
                                 ),
                               ),
                               // Gross Total
+                              // Gross Total
                               Text(
+                                CurrencyFormatter.format(item.grossTotal),
                                 CurrencyFormatter.format(item.grossTotal),
                                 style: AppTypography.labelLarge,
                               ),
@@ -458,6 +499,7 @@ class CartPanel extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               final val = int.tryParse(controller.text) ?? 0;
+              context.read<PosCubit>().updateItemDiscount(item, val);
               context.read<PosCubit>().updateItemDiscount(item, val);
               Navigator.pop(ctx);
             },

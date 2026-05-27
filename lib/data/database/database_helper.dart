@@ -316,6 +316,52 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create Doctors table
+    await db.execute('''
+      CREATE TABLE doctors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        specialization TEXT,
+        phone TEXT,
+        is_active INTEGER DEFAULT 1,
+        server_id INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    // Create Registrations table
+    await db.execute('''
+      CREATE TABLE registrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        registration_no TEXT UNIQUE NOT NULL,
+        customer_id INTEGER NOT NULL,
+        doctor_id INTEGER NOT NULL,
+        registration_date TEXT NOT NULL,
+        complaint TEXT,
+        status TEXT NOT NULL, -- pending, examining, completed, cancelled
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create Examinations table
+    await db.execute('''
+      CREATE TABLE examinations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        registration_id INTEGER UNIQUE NOT NULL,
+        symptoms TEXT,
+        diagnosis TEXT,
+        therapy TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes
     await _createIndexes(db);
 
@@ -357,6 +403,12 @@ class DatabaseHelper {
     // Product Units indexes
     await db.execute('CREATE INDEX idx_product_units_product ON product_units(product_id)');
     await db.execute('CREATE INDEX idx_product_units_parent ON product_units(parent_unit_id)');
+
+    // Registrations and Examinations indexes
+    await db.execute('CREATE INDEX idx_registrations_customer ON registrations(customer_id)');
+    await db.execute('CREATE INDEX idx_registrations_doctor ON registrations(doctor_id)');
+    await db.execute('CREATE INDEX idx_registrations_date ON registrations(registration_date)');
+    await db.execute('CREATE INDEX idx_examinations_registration ON examinations(registration_id)');
   }
 
   Future<void> _seedData(Database db) async {
@@ -400,6 +452,10 @@ class DatabaseHelper {
       AppConstants.keyLastInvoiceDate: '',
       AppConstants.keyLastInvoiceNumber: '0',
       'fonnte_token': '',
+      AppConstants.keyBranchId: AppConstants.defaultBranchId,
+      AppConstants.keyBranchCode: AppConstants.defaultBranchCode,
+      AppConstants.keyCustomerName: AppConstants.defaultCustomerName,
+      AppConstants.keyCustomerWa: AppConstants.defaultCustomerWa,
     };
 
     for (final entry in settings.entries) {
@@ -806,6 +862,60 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE units ADD COLUMN server_id INTEGER');
       await db.execute('ALTER TABLE purchase_orders ADD COLUMN server_id INTEGER');
       await db.execute('ALTER TABLE purchase_orders ADD COLUMN is_synced INTEGER DEFAULT 0');
+    }
+
+    if (oldVersion < 13) {
+      // Create Doctors table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS doctors (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          specialization TEXT,
+          phone TEXT,
+          is_active INTEGER DEFAULT 1,
+          server_id INTEGER,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      // Create Registrations table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS registrations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          registration_no TEXT UNIQUE NOT NULL,
+          customer_id INTEGER NOT NULL,
+          doctor_id INTEGER NOT NULL,
+          registration_date TEXT NOT NULL,
+          complaint TEXT,
+          status TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+          FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create Examinations table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS examinations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          registration_id INTEGER UNIQUE NOT NULL,
+          symptoms TEXT,
+          diagnosis TEXT,
+          therapy TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create indexes for new tables
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_customer ON registrations(customer_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_doctor ON registrations(doctor_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_date ON registrations(registration_date)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_examinations_registration ON examinations(registration_id)');
     }
   }
 

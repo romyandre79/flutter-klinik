@@ -8,11 +8,13 @@ import 'package:kreatif_otopart/data/models/product_unit.dart';
 class ProductItemCard extends StatelessWidget {
   final Product product;
   final ProductUnit? selectedUnit;
+  final ProductUnit? selectedUnit;
   final VoidCallback onTap;
 
   const ProductItemCard({
     super.key,
     required this.product,
+    this.selectedUnit,
     this.selectedUnit,
     required this.onTap,
   });
@@ -35,10 +37,15 @@ class ProductItemCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Product Image / Placeholder
+              // Product Image / Placeholder
               Container(
                 width: double.infinity,
                 height: 80,
+                width: double.infinity,
+                height: 80,
                 decoration: BoxDecoration(
+                  color: AppThemeColors.primarySurface.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppSpacing.sm),
                   color: AppThemeColors.primarySurface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(AppSpacing.sm),
                   image: product.imageUrl != null && File(product.imageUrl!).existsSync()
@@ -53,6 +60,9 @@ class ProductItemCard extends StatelessWidget {
                     : Center(
                         child: Text(
                           product.name.isNotEmpty ? product.name[0].toUpperCase() : '?',
+                          style: AppTypography.titleLarge.copyWith(
+                            color: AppThemeColors.primary.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.bold,
                           style: AppTypography.titleLarge.copyWith(
                             color: AppThemeColors.primary.withValues(alpha: 0.5),
                             fontWeight: FontWeight.bold,
@@ -74,6 +84,7 @@ class ProductItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
+                      '/${selectedUnit?.unitName ?? product.unit}',
                       '/${selectedUnit?.unitName ?? product.unit}',
                       style: AppTypography.labelSmall.copyWith(
                         color: AppThemeColors.textSecondary,
@@ -104,8 +115,33 @@ class ProductItemCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                ),
+              ),
+              // Stock Indicator
+              if (product.type == ProductType.goods)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (selectedUnit?.stock ?? product.stock ?? 0) > 0 
+                        ? Colors.green.withValues(alpha: 0.1) 
+                        : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Stok: ${selectedUnit?.stock ?? product.stock ?? 0}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: (selectedUnit?.stock ?? product.stock ?? 0) > 0 ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
               // Price
               Text(
+                CurrencyFormatter.format(selectedUnit?.price ?? product.price),
                 CurrencyFormatter.format(selectedUnit?.price ?? product.price),
                 style: AppTypography.titleMedium.copyWith(
                   color: AppThemeColors.primary,

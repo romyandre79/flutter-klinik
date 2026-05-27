@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:kreatif_otopart/core/constants/app_constants.dart';
@@ -664,6 +665,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   );
                                 },
                               ),
+                              if (user != null) _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.medical_services_outlined,
+                                title: 'Master Dokter',
+                                subtitle: 'Kelola data dokter klinik',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const DoctorListScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ),
 
@@ -787,8 +803,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     context: context,
                                     icon: isLoading ? Icons.sync : Icons.cloud_sync,
                                     title: 'Sinkronisasi Data',
-                                    subtitle: isLoading 
-                                        ? (state as SyncLoading).message 
+                                    subtitle: state is SyncLoading
+                                        ? state.message
                                         : 'Upload transaksi & download master data',
                                     onTap: isLoading ? null : () => context.read<SyncCubit>().syncData(),
                                     trailing: isLoading 
@@ -832,6 +848,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _buildSection(
                               title: 'Manajemen Data',
                               children: [
+                                _buildSettingTile(
+                                  context: context,
+                                  icon: Icons.calculate_outlined,
+                                  title: 'Hitung Ulang Stok',
+                                  subtitle: 'Koreksi stok produk berdasarkan data satuan',
+                                  onTap: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Hitung Ulang Stok?'),
+                                        content: const Text(
+                                          'Stok semua produk akan dihitung ulang dari data per-satuan. '
+                                          'Stok satuan yang negatif (akibat bug konversi) akan diperbaiki otomatis.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: const Text('Batal'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: const Text('Hitung Ulang'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed == true && context.mounted) {
+                                      try {
+                                        await context.read<ProductRepository>().recalculateAllStocks();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Stok berhasil dihitung ulang'),
+                                              backgroundColor: AppThemeColors.success,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Gagal: $e'),
+                                              backgroundColor: AppThemeColors.error,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                ),
+                                _buildDivider(),
                                 _buildSettingTile(
                                   context: context,
                                   icon: Icons.calculate_outlined,
@@ -1263,6 +1330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VoidCallback? onTap,
     bool showArrow = true,
     Widget? trailing,
+    bool locked = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1281,7 +1349,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: locked
                       ? AppThemeColors.textSecondary.withValues(alpha: 0.08)
                       : AppThemeColors.primarySurface,
+                  color: locked
+                      ? AppThemeColors.textSecondary.withValues(alpha: 0.08)
+                      : AppThemeColors.primarySurface,
                   borderRadius: AppRadius.smRadius,
+                ),
+                child: Icon(
+                  icon,
+                  color: locked ? AppThemeColors.textSecondary : AppThemeColors.primary,
+                  size: 20,
                 ),
                 child: Icon(
                   icon,
@@ -1299,6 +1375,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title,
                       style: AppTypography.titleSmall.copyWith(
                         fontWeight: FontWeight.w500,
+                        color: locked ? AppThemeColors.textSecondary : null,
                       ),
                     ),
                     Text(
@@ -1317,8 +1394,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: AppSpacing.md),
                 trailing,
               ],
+              // Lock icon when locked
+              if (locked)
+                const Icon(
+                  Icons.lock_outline,
+                  color: AppThemeColors.textSecondary,
+                  size: 14,
+                ),
               // Arrow or edit icon
-              if (showArrow && onTap != null && trailing == null)
+              if (!locked && showArrow && onTap != null && trailing == null)
                 Container(
                   width: 28,
                   height: 28,

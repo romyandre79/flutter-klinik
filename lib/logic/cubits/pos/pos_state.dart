@@ -38,7 +38,9 @@ class PosLoaded extends PosState {
   });
 
   int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.effectivePrice * item.quantity).round());
+  int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.effectivePrice * item.quantity).round());
   int get totalItems => cartItems.fold(0, (sum, item) => sum + item.quantity.round());
+  int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + item.discount);
   int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + item.discount);
   int get totalDiscount => totalItemDiscount + orderDiscount;
   int get grandTotal => totalAmount - totalDiscount;
@@ -53,6 +55,7 @@ class PosLoaded extends PosState {
     String? selectedCategory,
     String? searchQuery,
     Object? selectedCustomer = _absent,
+    Object? selectedCustomer = _absent,
     String? customerName,
     int? orderDiscount,
     Object? nomorPolisi = _absent,
@@ -63,6 +66,9 @@ class PosLoaded extends PosState {
       cartItems: cartItems ?? this.cartItems,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
+      selectedCustomer: selectedCustomer == _absent
+          ? this.selectedCustomer
+          : selectedCustomer as Customer?,
       selectedCustomer: selectedCustomer == _absent
           ? this.selectedCustomer
           : selectedCustomer as Customer?,

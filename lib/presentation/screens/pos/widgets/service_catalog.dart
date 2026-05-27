@@ -110,6 +110,28 @@ class ServiceCatalog extends StatelessWidget {
                     );
                   },
                 );
+                final flattenedItems = _getFlattenedItems(state.filteredProducts);
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount, 
+                    childAspectRatio: 0.8, 
+                    crossAxisSpacing: AppSpacing.sm,
+                    mainAxisSpacing: AppSpacing.sm,
+                  ),
+                  itemCount: flattenedItems.length,
+                  itemBuilder: (context, index) {
+                    final item = flattenedItems[index];
+                    return ProductItemCard(
+                      product: item.product,
+                      selectedUnit: item.unit,
+                      onTap: () {
+                        context.read<PosCubit>().addToCart(item.product, unit: item.unit);
+                      },
+                    );
+                  },
+                );
                   }
                 );
               }
@@ -122,6 +144,25 @@ class ServiceCatalog extends StatelessWidget {
     );
   }
 
+  /// Helper to flatten products into an item list for the grid.
+  /// Each item is a record containing the product and an optional specific unit.
+  List<({Product product, ProductUnit? unit})> _getFlattenedItems(List<Product> products) {
+    final List<({Product product, ProductUnit? unit})> items = [];
+    
+    for (var product in products) {
+      if (product.type == ProductType.goods && product.units.isNotEmpty) {
+        // Add a card for each unit
+        for (var unit in product.units) {
+          items.add((product: product, unit: unit));
+        }
+      } else {
+        // Add a single card for service or product without specified units
+        items.add((product: product, unit: null));
+      }
+    }
+    
+    return items;
+  }
   /// Helper to flatten products into an item list for the grid.
   /// Each item is a record containing the product and an optional specific unit.
   List<({Product product, ProductUnit? unit})> _getFlattenedItems(List<Product> products) {

@@ -54,6 +54,10 @@ class AppConstants {
   static const String keyBranchCode = 'branch_code';
   static const String keyCustomerName = 'customer_name';
   static const String keyCustomerWa = 'customer_wa';
+  static const String keyBranchId = 'branch_id';
+  static const String keyBranchCode = 'branch_code';
+  static const String keyCustomerName = 'customer_name';
+  static const String keyCustomerWa = 'customer_wa';
 
   // Default Store Info
   static const String defaultStoreName = 'Toko Serba Ada';

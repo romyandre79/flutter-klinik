@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\lara\\\\www\\\\kreatif-klinik\" -Force)",
+      "Bash(Select-Object -Property Name, PSIsContainer)",
+      "Bash(Format-Table)",
+      "Bash(Get-ChildItem -Path \"C:\\\\lara\\\\www\\\\kreatif-klinik\" -Filter \"*.exe\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 3 FullName)",
+      "PowerShell(head *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(where.exe sqlite3 2>$null; if \\(-not $?\\) { \"sqlite3 not found in PATH\" })",
+      "PowerShell(python --version 2>&1)"
+    ]
+  }
+}

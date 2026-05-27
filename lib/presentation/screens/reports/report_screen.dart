@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/logic/cubits/report/report_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/report/report_state.dart';
-import 'package:kreatif_klinik/presentation/screens/main_screen.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/core/utils/currency_formatter.dart';
+import 'package:kreatif_pos/core/utils/date_formatter.dart';
+import 'package:kreatif_pos/logic/cubits/report/report_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/report/report_state.dart';
+import 'package:kreatif_pos/presentation/screens/main_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});

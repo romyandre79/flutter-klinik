@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/user/user_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/report/report_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/dashboard/dashboard_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/dashboard/dashboard_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/reports/report_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/settings_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/pos/pos_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/orders/order_list_screen.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/purchasing/purchase_order_list_screen.dart';
-import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_cubit.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
-import 'package:kreatif_klinik/data/repositories/order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/payment_repository.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/data/models/user.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_pos/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/user/user_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/report/report_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/dashboard/dashboard_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/dashboard/dashboard_screen.dart';
+import 'package:kreatif_pos/presentation/screens/reports/report_screen.dart';
+import 'package:kreatif_pos/presentation/screens/settings/settings_screen.dart';
+import 'package:kreatif_pos/presentation/screens/pos/pos_screen.dart';
+import 'package:kreatif_pos/presentation/screens/orders/order_list_screen.dart';
+import 'package:kreatif_pos/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/purchasing/purchase_order_list_screen.dart';
+import 'package:kreatif_pos/logic/cubits/purchase_order/purchase_order_cubit.dart';
+import 'package:kreatif_pos/data/repositories/product_repository.dart';
+import 'package:kreatif_pos/data/repositories/purchase_order_repository.dart';
+import 'package:kreatif_pos/data/repositories/supplier_repository.dart';
+import 'package:kreatif_pos/data/repositories/customer_repository.dart';
+import 'package:kreatif_pos/data/repositories/order_repository.dart';
+import 'package:kreatif_pos/data/repositories/payment_repository.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -36,6 +36,8 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   late OrderCubit _orderCubit;
   late DashboardCubit _dashboardCubit;
+  late ReportCubit _reportCubit;
+  late UserCubit _userCubit;
   PosCubit? _posCubit;
 
   @override
@@ -48,12 +50,16 @@ class _MainScreenState extends State<MainScreen> {
       customerRepository: context.read<CustomerRepository>(),
       paymentRepository: context.read<PaymentRepository>(),
     )..loadOrders();
+    _reportCubit = ReportCubit();
+    _userCubit = UserCubit();
   }
 
   @override
   void dispose() {
     _orderCubit.close();
     _dashboardCubit.close();
+    _reportCubit.close();
+    _userCubit.close();
     _posCubit?.close();
     super.dispose();
   }
@@ -198,14 +204,14 @@ class _MainScreenState extends State<MainScreen> {
           );
           
           screens.add(
-            BlocProvider(
-              create: (_) => ReportCubit(),
+            BlocProvider.value(
+              value: _reportCubit,
               child: const ReportScreen(),
             ),
           );
           screens.add(
-            BlocProvider(
-              create: (_) => UserCubit(),
+            BlocProvider.value(
+              value: _userCubit,
               child: const SettingsScreen(),
             ),
           );

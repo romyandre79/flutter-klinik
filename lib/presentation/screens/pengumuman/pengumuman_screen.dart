@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
-import 'package:kreatif_klinik/data/models/pengumuman_template.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
-import 'package:kreatif_klinik/core/services/fonnte_service.dart';
-import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_state.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/data/models/customer.dart';
+import 'package:kreatif_pos/data/models/pengumuman_template.dart';
+import 'package:kreatif_pos/data/repositories/customer_repository.dart';
+import 'package:kreatif_pos/core/services/fonnte_service.dart';
+import 'package:kreatif_pos/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/pengumuman/pengumuman_state.dart';
 
 class PengumumanScreen extends StatefulWidget {
   final String? productName;

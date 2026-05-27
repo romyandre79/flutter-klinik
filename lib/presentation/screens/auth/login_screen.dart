@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/presentation/widgets/custom_text_field.dart';
-import 'package:kreatif_klinik/presentation/widgets/custom_button.dart';
+import 'package:kreatif_pos/core/constants/app_constants.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_pos/presentation/widgets/custom_text_field.dart';
+import 'package:kreatif_pos/presentation/widgets/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen>
                               child: Padding(
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 child: Image.asset(
-                                  'assets/icons/logoklinik.png',
+                                  'assets/icons/logopos.png',
                                   fit: BoxFit.contain,
                                 ),
                               ),

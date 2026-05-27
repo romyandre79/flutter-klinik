@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/customer/customer_state.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
-import 'package:kreatif_klinik/presentation/widgets/base_searchable_picker.dart';
+import 'package:kreatif_pos/logic/cubits/customer/customer_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/customer/customer_state.dart';
+import 'package:kreatif_pos/data/models/customer.dart';
+import 'package:kreatif_pos/presentation/widgets/base_searchable_picker.dart';
 
 class SearchableCustomerPicker extends StatelessWidget {
   final Customer? selectedCustomer;

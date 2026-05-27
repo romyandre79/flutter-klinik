@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:kreatif_klinik/core/constants/colors.dart';
-import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
-import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/customer/customer_state.dart';
-import 'package:kreatif_klinik/presentation/screens/customers/customer_form_screen.dart';
+import 'package:kreatif_pos/core/constants/colors.dart';
+import 'package:kreatif_pos/core/utils/currency_formatter.dart';
+import 'package:kreatif_pos/core/utils/date_formatter.dart';
+import 'package:kreatif_pos/data/models/customer.dart';
+import 'package:kreatif_pos/logic/cubits/customer/customer_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/customer/customer_state.dart';
+import 'package:kreatif_pos/presentation/screens/customers/customer_form_screen.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
   final Customer customer;

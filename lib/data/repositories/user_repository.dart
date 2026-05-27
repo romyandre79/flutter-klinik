@@ -1,6 +1,6 @@
-import 'package:kreatif_klinik/core/utils/password_helper.dart';
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
+import 'package:kreatif_pos/core/utils/password_helper.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
+import 'package:kreatif_pos/data/models/user.dart';
 
 class UserRepository {
   final DatabaseHelper _databaseHelper;

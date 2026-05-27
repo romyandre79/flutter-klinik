@@ -1,5 +1,5 @@
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/data/models/supplier.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
+import 'package:kreatif_pos/data/models/supplier.dart';
 
 class SupplierRepository {
   final DatabaseHelper _databaseHelper;

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/service.dart';
+import 'package:kreatif_pos/data/models/service.dart';
 
 abstract class ServiceState extends Equatable {
   const ServiceState();

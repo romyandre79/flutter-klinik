@@ -89,8 +89,10 @@ class OrderItem extends Equatable {
 
   // Helper: Calculate subtotal from quantity and price
   static int calculateSubtotal(double quantity, int pricePerUnit, int discount) {
-    return ((pricePerUnit - discount) * quantity).round();
+    return (pricePerUnit * quantity).round() - discount;
   }
+
+  int get grossSubtotal => (pricePerUnit * quantity).round();
 
   @override
   List<Object?> get props => [

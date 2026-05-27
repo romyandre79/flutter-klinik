@@ -1,8 +1,8 @@
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/data/models/purchase_order.dart';
-import 'package:kreatif_klinik/data/models/purchase_order_item.dart';
-import 'package:kreatif_klinik/data/models/supplier.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
+import 'package:kreatif_pos/data/models/purchase_order.dart';
+import 'package:kreatif_pos/data/models/purchase_order_item.dart';
+import 'package:kreatif_pos/data/models/supplier.dart';
+import 'package:kreatif_pos/data/repositories/product_repository.dart';
 
 class PurchaseOrderRepository {
   final DatabaseHelper _databaseHelper;

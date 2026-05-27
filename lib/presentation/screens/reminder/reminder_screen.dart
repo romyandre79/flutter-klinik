@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/data/models/product.dart';
+import 'package:kreatif_pos/data/repositories/product_repository.dart';
 import 'package:intl/intl.dart';
-import 'package:kreatif_klinik/presentation/screens/pengumuman/pengumuman_screen.dart';
+import 'package:kreatif_pos/presentation/screens/pengumuman/pengumuman_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/pengumuman/pengumuman_cubit.dart';
 
 class ReminderScreen extends StatefulWidget {
   const ReminderScreen({super.key});

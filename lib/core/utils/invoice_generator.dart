@@ -1,6 +1,6 @@
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
-import 'package:kreatif_klinik/core/utils/date_formatter.dart';
-import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_pos/core/constants/app_constants.dart';
+import 'package:kreatif_pos/core/utils/date_formatter.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
 
 class InvoiceGenerator {
   /// Generate invoice number

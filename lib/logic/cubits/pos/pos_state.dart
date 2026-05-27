@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/cart_item.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
+import 'package:kreatif_pos/data/models/cart_item.dart';
+import 'package:kreatif_pos/data/models/product.dart';
+import 'package:kreatif_pos/data/models/customer.dart';
 
 abstract class PosState extends Equatable {
   const PosState();
@@ -35,11 +35,14 @@ class PosLoaded extends PosState {
     this.orderDiscount = 0,
   });
 
-  int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.product.price * item.quantity).round());
+  int get totalAmount => cartItems.fold(0, (sum, item) => sum + (item.effectivePrice * item.quantity).round());
   int get totalItems => cartItems.fold(0, (sum, item) => sum + item.quantity.round());
-  int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + (item.discount * item.quantity).round());
+  int get totalItemDiscount => cartItems.fold(0, (sum, item) => sum + item.discount);
   int get totalDiscount => totalItemDiscount + orderDiscount;
   int get grandTotal => totalAmount - totalDiscount;
+
+  // Sentinel so callers can explicitly pass null to clear selectedCustomer.
+  static const _absent = Object();
 
   PosLoaded copyWith({
     List<Product>? products,
@@ -47,7 +50,7 @@ class PosLoaded extends PosState {
     List<CartItem>? cartItems,
     String? selectedCategory,
     String? searchQuery,
-    Customer? selectedCustomer,
+    Object? selectedCustomer = _absent,
     String? customerName,
     int? orderDiscount,
   }) {
@@ -57,7 +60,9 @@ class PosLoaded extends PosState {
       cartItems: cartItems ?? this.cartItems,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedCustomer: selectedCustomer ?? this.selectedCustomer,
+      selectedCustomer: selectedCustomer == _absent
+          ? this.selectedCustomer
+          : selectedCustomer as Customer?,
       customerName: customerName ?? this.customerName,
       orderDiscount: orderDiscount ?? this.orderDiscount,
     );

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/order_item.dart';
-import 'package:kreatif_klinik/data/models/payment.dart';
+import 'package:kreatif_pos/data/models/order_item.dart';
+import 'package:kreatif_pos/data/models/payment.dart';
 
 enum OrderStatus { pending, process, ready, done }
 
@@ -212,13 +212,14 @@ class Order extends Equatable {
   }
 
   // Helper methods
-  int get remainingPayment => totalPrice - paid;
+  int get remainingPayment => (totalPrice - paid).clamp(0, 999999999);
+  int get change => (paid - totalPrice).clamp(0, 999999999);
   bool get isPaid => paid >= totalPrice;
   bool get hasDeposit => paid > 0 && paid < totalPrice;
 
   // Aliases for printer service
   String get invoiceNumber => invoiceNo;
-  int get subtotal => totalPrice;
+  int get subtotal => totalPrice + totalDiscount;
   int get discount => totalDiscount;
   int get totalAmount => totalPrice;
   int get paidAmount => paid;

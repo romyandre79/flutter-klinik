@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
-import 'package:kreatif_klinik/presentation/screens/pos/widgets/product_item_card.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/pos/pos_state.dart';
+import 'package:kreatif_pos/presentation/screens/pos/widgets/product_item_card.dart';
+import 'package:kreatif_pos/data/models/product.dart';
+import 'package:kreatif_pos/data/models/product_unit.dart';
 
 class ServiceCatalog extends StatelessWidget {
   const ServiceCatalog({super.key});
@@ -86,25 +88,28 @@ class ServiceCatalog extends StatelessWidget {
                     final double itemWidth = 140; 
                     final int crossAxisCount = (constraints.maxWidth / itemWidth).floor().clamp(2, 6); // Min 2, Max 6 cols
 
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount, 
-                        childAspectRatio: 0.8, // Slightly taller cards to be safe
-                        crossAxisSpacing: AppSpacing.sm,
-                        mainAxisSpacing: AppSpacing.sm,
-                      ),
-                      itemCount: state.filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = state.filteredProducts[index];
-                        return ProductItemCard(
-                          product: product,
-                          onTap: () {
-                            context.read<PosCubit>().addToCart(product);
-                          },
-                        );
+                final flattenedItems = _getFlattenedItems(state.filteredProducts);
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount, 
+                    childAspectRatio: 0.8, 
+                    crossAxisSpacing: AppSpacing.sm,
+                    mainAxisSpacing: AppSpacing.sm,
+                  ),
+                  itemCount: flattenedItems.length,
+                  itemBuilder: (context, index) {
+                    final item = flattenedItems[index];
+                    return ProductItemCard(
+                      product: item.product,
+                      selectedUnit: item.unit,
+                      onTap: () {
+                        context.read<PosCubit>().addToCart(item.product, unit: item.unit);
                       },
                     );
+                  },
+                );
                   }
                 );
               }
@@ -117,4 +122,23 @@ class ServiceCatalog extends StatelessWidget {
     );
   }
 
+  /// Helper to flatten products into an item list for the grid.
+  /// Each item is a record containing the product and an optional specific unit.
+  List<({Product product, ProductUnit? unit})> _getFlattenedItems(List<Product> products) {
+    final List<({Product product, ProductUnit? unit})> items = [];
+    
+    for (var product in products) {
+      if (product.type == ProductType.goods && product.units.isNotEmpty) {
+        // Add a card for each unit
+        for (var unit in product.units) {
+          items.add((product: product, unit: unit));
+        }
+      } else {
+        // Add a single card for service or product without specified units
+        items.add((product: product, unit: null));
+      }
+    }
+    
+    return items;
+  }
 }

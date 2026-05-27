@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/services/import_service.dart';
-import 'package:kreatif_klinik/data/models/supplier.dart';
-import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_state.dart';
+import 'package:kreatif_pos/core/services/import_service.dart';
+import 'package:kreatif_pos/data/models/supplier.dart';
+import 'package:kreatif_pos/data/repositories/supplier_repository.dart';
+import 'package:kreatif_pos/logic/cubits/supplier/supplier_state.dart';
 
 class SupplierCubit extends Cubit<SupplierState> {
   final SupplierRepository _supplierRepository;

@@ -1,4 +1,4 @@
-import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
 
 class SettingsRepository {
   final DatabaseHelper _databaseHelper;

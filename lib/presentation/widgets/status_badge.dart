@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:kreatif_klinik/core/constants/colors.dart';
-import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_pos/core/constants/colors.dart';
+import 'package:kreatif_pos/data/models/order.dart';
 
 class StatusBadge extends StatelessWidget {
   final OrderStatus status;

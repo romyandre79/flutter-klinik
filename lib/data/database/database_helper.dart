@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
-import 'package:kreatif_klinik/core/utils/password_helper.dart';
+import 'package:kreatif_pos/core/constants/app_constants.dart';
+import 'package:kreatif_pos/core/utils/password_helper.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();

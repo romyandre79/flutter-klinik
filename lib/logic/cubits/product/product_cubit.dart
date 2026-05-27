@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/services/import_service.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_state.dart';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_pos/core/services/import_service.dart';
+import 'package:kreatif_pos/data/models/product.dart';
+import 'package:kreatif_pos/data/repositories/product_repository.dart';
+import 'package:kreatif_pos/logic/cubits/product/product_state.dart';
+import 'package:kreatif_pos/core/constants/app_constants.dart';
 
 class ProductCubit extends Cubit<ProductState> {
   final ProductRepository _productRepository;

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_pos/data/models/product.dart';
 
 abstract class ProductState extends Equatable {
   const ProductState();

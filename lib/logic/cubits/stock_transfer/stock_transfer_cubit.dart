@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/data/models/stock_transfer.dart';
-import 'package:kreatif_klinik/data/repositories/stock_transfer_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/stock_transfer/stock_transfer_state.dart';
+import 'package:kreatif_pos/data/models/stock_transfer.dart';
+import 'package:kreatif_pos/data/repositories/stock_transfer_repository.dart';
+import 'package:kreatif_pos/logic/cubits/stock_transfer/stock_transfer_state.dart';
 
 class StockTransferCubit extends Cubit<StockTransferState> {
   final StockTransferRepository _repository;

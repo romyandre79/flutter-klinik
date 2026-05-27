@@ -6,17 +6,17 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/data/models/unit.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_state.dart';
-import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/data/models/product.dart';
+import 'package:kreatif_pos/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_pos/data/models/user.dart';
+import 'package:kreatif_pos/data/models/unit.dart';
+import 'package:kreatif_pos/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/unit/unit_state.dart';
+import 'package:kreatif_pos/presentation/widgets/searchable_unit_picker.dart';
+import 'package:kreatif_pos/data/models/product_unit.dart';
 
 
 class ProductFormScreen extends StatefulWidget {

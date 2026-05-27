@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kreatifmajumu.klinikoffline"
+    namespace = "com.kreatifmajumu.posoffline"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.kreatifmajumu.klinikoffline"
+        applicationId = "com.kreatifmajumu.posoffline"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -42,7 +42,7 @@ android {
     applicationVariants.all {
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-            output.outputFileName = "kreatif-klinik.apk"
+            output.outputFileName = "kreatif-pos.apk"
         }
     }
 }

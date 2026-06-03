@@ -1,35 +1,36 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/logic/cubits/settings/settings_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/settings/settings_state.dart';
-import 'package:kreatif_klinik/logic/cubits/user/user_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/user_management_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/printer_settings_screen.dart';
-import 'package:kreatif_klinik/logic/cubits/printer/printer_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/product/product_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/products/product_list_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/customers/customer_list_screen.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/purchasing/supplier_list_screen.dart';
-import 'package:kreatif_klinik/data/repositories/unit_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/unit/unit_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/unit_list_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/doctor_list_screen.dart';
-import 'package:kreatif_klinik/data/services/database_service.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/pengumuman_template_screen.dart';
-import 'package:kreatif_klinik/logic/sync/sync_cubit.dart';
-import 'package:kreatif_klinik/logic/sync/sync_state.dart';
-import 'package:kreatif_klinik/core/services/session_service.dart';
+import 'package:kreatif_pos/core/constants/app_constants.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/data/models/user.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_pos/logic/cubits/settings/settings_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/settings/settings_state.dart';
+import 'package:kreatif_pos/logic/cubits/user/user_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/customer/customer_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/settings/user_management_screen.dart';
+import 'package:kreatif_pos/presentation/screens/settings/printer_settings_screen.dart';
+import 'package:kreatif_pos/logic/cubits/printer/printer_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/product/product_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/products/product_list_screen.dart';
+import 'package:kreatif_pos/presentation/screens/customers/customer_list_screen.dart';
+import 'package:kreatif_pos/data/repositories/product_repository.dart';
+import 'package:kreatif_pos/data/repositories/supplier_repository.dart';
+import 'package:kreatif_pos/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/purchasing/supplier_list_screen.dart';
+import 'package:kreatif_pos/data/repositories/unit_repository.dart';
+import 'package:kreatif_pos/logic/cubits/unit/unit_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/settings/unit_list_screen.dart';
+import 'package:kreatif_pos/data/services/database_service.dart';
+import 'package:kreatif_pos/logic/cubits/pengumuman/pengumuman_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/settings/pengumuman_template_screen.dart';
+import 'package:kreatif_pos/logic/sync/sync_cubit.dart';
+import 'package:kreatif_pos/logic/sync/sync_state.dart';
+import 'package:kreatif_pos/core/services/session_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -462,24 +463,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           // Store Info Section
                           _buildSection(
                             title: 'Informasi Apotik/Klinik',
-                            children: [
-                              _buildSettingTile(
+                            children: [                              _buildSettingTile(
                                 context: context,
                                 icon: Icons.store,
-                                title: 'Nama Apotik/Klinik',
-                                subtitle:
-                                    storeInfo?.name ??
-                                    AppConstants.defaultStoreName,
+                                title: 'Nama Toko / Klinik',
+                                subtitle: storeInfo?.name ?? AppConstants.defaultStoreName,
                                 locked: !AppConstants.isDemoMode,
                                 onTap: AppConstants.isDemoMode ? () => _showEditDialog(
-                                  title: 'Ubah Data Nama Apotik/Klinik',
-                                  currentValue:
-                                      storeInfo?.name ??
-                                      AppConstants.defaultStoreName,
-                                  hint: 'Masukkan nama Apotik/Klinik',
+                                  title: 'Ubah Data Nama Toko / Klinik',
+                                  currentValue: storeInfo?.name ?? AppConstants.defaultStoreName,
+                                  hint: 'Masukkan nama',
                                   icon: Icons.store,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateStoreName(value),
+                                  onSave: (value) => _settingsCubit.updateStoreName(value),
                                 ) : null,
                               ),
                               _buildDivider(),
@@ -487,20 +482,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 context: context,
                                 icon: Icons.location_on,
                                 title: 'Alamat',
-                                subtitle:
-                                    storeInfo?.address ??
-                                    AppConstants.defaultStoreAddress,
+                                subtitle: storeInfo?.address ?? AppConstants.defaultStoreAddress,
                                 locked: !AppConstants.isDemoMode,
                                 onTap: AppConstants.isDemoMode ? () => _showEditDialog(
                                   title: 'Ubah Data Alamat',
-                                  currentValue:
-                                      storeInfo?.address ??
-                                      AppConstants.defaultStoreAddress,
-                                  hint: 'Masukkan alamat Apotik/Klinik',
+                                  currentValue: storeInfo?.address ?? AppConstants.defaultStoreAddress,
+                                  hint: 'Masukkan alamat',
                                   icon: Icons.location_on,
                                   maxLines: 2,
-                                  onSave: (value) => _settingsCubit
-                                      .updateStoreAddress(value),
+                                  onSave: (value) => _settingsCubit.updateStoreAddress(value),
                                 ) : null,
                               ),
                               _buildDivider(),
@@ -508,20 +498,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 context: context,
                                 icon: Icons.phone,
                                 title: 'Nomor HP',
-                                subtitle:
-                                    storeInfo?.phone ??
-                                    AppConstants.defaultStorePhone,
+                                subtitle: storeInfo?.phone ?? AppConstants.defaultStorePhone,
                                 locked: !AppConstants.isDemoMode,
                                 onTap: AppConstants.isDemoMode ? () => _showEditDialog(
                                   title: 'Ubah Data Nomor HP',
-                                  currentValue:
-                                      storeInfo?.phone ??
-                                      AppConstants.defaultStorePhone,
+                                  currentValue: storeInfo?.phone ?? AppConstants.defaultStorePhone,
                                   hint: 'Masukkan nomor HP',
                                   icon: Icons.phone,
                                   keyboardType: TextInputType.phone,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateStorePhone(value),
+                                  onSave: (value) => _settingsCubit.updateStorePhone(value),
                                 ) : null,
                               ),
                               _buildDivider(),
@@ -529,8 +514,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 context: context,
                                 icon: Icons.badge_outlined,
                                 title: 'ID Cabang',
-                                subtitle: (storeInfo?.branchId == null ||
-                                        storeInfo!.branchId.isEmpty)
+                                subtitle: (storeInfo?.branchId == null || storeInfo!.branchId.isEmpty)
                                     ? 'Belum diatur'
                                     : storeInfo.branchId,
                                 locked: !AppConstants.isDemoMode,
@@ -539,8 +523,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   currentValue: storeInfo?.branchId ?? '',
                                   hint: 'Masukkan ID Cabang',
                                   icon: Icons.badge_outlined,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateBranchId(value),
+                                  onSave: (value) => _settingsCubit.updateBranchId(value),
                                 ) : null,
                               ),
                               _buildDivider(),
@@ -548,8 +531,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 context: context,
                                 icon: Icons.code,
                                 title: 'Kode Cabang',
-                                subtitle: (storeInfo?.branchCode == null ||
-                                        storeInfo!.branchCode.isEmpty)
+                                subtitle: (storeInfo?.branchCode == null || storeInfo!.branchCode.isEmpty)
                                     ? 'Belum diatur'
                                     : storeInfo.branchCode,
                                 locked: !AppConstants.isDemoMode,
@@ -558,8 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   currentValue: storeInfo?.branchCode ?? '',
                                   hint: 'Masukkan Kode Cabang',
                                   icon: Icons.code,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateBranchCode(value),
+                                  onSave: (value) => _settingsCubit.updateBranchCode(value),
                                 ) : null,
                               ),
                               _buildDivider(),
@@ -567,8 +548,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 context: context,
                                 icon: Icons.person_pin,
                                 title: 'Nama Customer',
-                                subtitle: (storeInfo?.customerName == null ||
-                                        storeInfo!.customerName.isEmpty)
+                                subtitle: (storeInfo?.customerName == null || storeInfo!.customerName.isEmpty)
                                     ? 'Belum diatur'
                                     : storeInfo.customerName,
                                 locked: !AppConstants.isDemoMode,
@@ -577,8 +557,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   currentValue: storeInfo?.customerName ?? '',
                                   hint: 'Masukkan Nama Customer',
                                   icon: Icons.person_pin,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateCustomerName(value),
+                                  onSave: (value) => _settingsCubit.updateCustomerName(value),
                                 ) : null,
                               ),
                               _buildDivider(),
@@ -586,8 +565,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 context: context,
                                 icon: Icons.chat_bubble_outline,
                                 title: 'No WA Customer',
-                                subtitle: (storeInfo?.customerWa == null ||
-                                        storeInfo!.customerWa.isEmpty)
+                                subtitle: (storeInfo?.customerWa == null || storeInfo!.customerWa.isEmpty)
                                     ? 'Belum diatur'
                                     : storeInfo.customerWa,
                                 locked: !AppConstants.isDemoMode,
@@ -597,13 +575,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   hint: 'Masukkan No WA Customer',
                                   icon: Icons.chat_bubble_outline,
                                   keyboardType: TextInputType.phone,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateCustomerWa(value),
+                                  onSave: (value) => _settingsCubit.updateCustomerWa(value),
                                 ) : null,
                               ),
                               _buildDivider(),
                               _buildDeviceKeyTile(storeInfo?.deviceId ?? ''),
-                            ],
+],
                           ),
 
                             // Service Management Section
@@ -1371,7 +1348,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: AppThemeColors.primarySurface,
+                    color: locked
+                      ? AppThemeColors.textSecondary.withValues(alpha: 0.08)
+                      : AppThemeColors.primarySurface,
                     borderRadius: AppRadius.smRadius,
                   ),
                   child: const Icon(
@@ -1386,6 +1365,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+
+
 
   Widget _buildDeviceKeyTile(String deviceId) {
     final displayKey = deviceId.isEmpty ? 'Memuat...' : deviceId;

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 class DeviceService {
-  static const String _salt = 'kreatif-klinik-2026';
+  static const String _salt = 'kreatif-kreatif-pos-2026';
   static String? _cachedDeviceId;
 
   static Future<String> getDeviceId() async {

@@ -62,7 +62,7 @@ add_library(flutter_wrapper_plugin STATIC
 )
 apply_standard_settings(flutter_wrapper_plugin)
 set_target_properties(flutter_wrapper_plugin PROPERTIES
-  KlinikITION_INDEPENDENT_CODE ON)
+  POSITION_INDEPENDENT_CODE ON)
 set_target_properties(flutter_wrapper_plugin PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
 target_link_libraries(flutter_wrapper_plugin PUBLIC flutter)

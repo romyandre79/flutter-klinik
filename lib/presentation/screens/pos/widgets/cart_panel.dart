@@ -118,15 +118,16 @@ class CartPanel extends StatelessWidget {
     }).toList();
 
     context.read<OrderCubit>().createOrder(
-      customerName: posState.customerName, 
+      customerName: posState.customerName,
       customerId: posState.selectedCustomer?.id,
       customerPhone: posState.selectedCustomer?.phone,
       items: orderItems,
-      dueDate: dueDate, // Pass the selected due date
+      dueDate: dueDate,
       initialPayment: paidAmount,
       paymentMethod: paymentMethod,
       status: status,
       totalDiscount: posState.orderDiscount,
+      nomorPolisi: posState.nomorPolisi,
       createdBy: 1, // TODO: Get from AuthCubit
     );
   }
@@ -166,8 +167,14 @@ class CartPanel extends StatelessWidget {
           children: [
             // Customer Selector
             const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
               child: _CustomerSelector(),
+            ),
+
+            // Nomor Polisi Input
+            const Padding(
+              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
+              child: _NomorPolisiInput(),
             ),
             
             // Header
@@ -502,6 +509,80 @@ class CartPanel extends StatelessWidget {
             child: const Text('Simpan'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showServiceNoteDialog(BuildContext context, CartItem item) {
+    String selectedUnit = 'km';
+    final controller = TextEditingController();
+
+    // Parse existing note
+    if (item.note != null && item.note!.isNotEmpty) {
+      final parts = item.note!.split(' ');
+      if (parts.length == 2) {
+        controller.text = parts[0];
+        if (parts[1] == 'hari') selectedUnit = 'hari';
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text('Keterangan – ${item.product.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('KM'),
+                    selected: selectedUnit == 'km',
+                    onSelected: (_) => setDialogState(() => selectedUnit = 'km'),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ChoiceChip(
+                    label: const Text('Hari'),
+                    selected: selectedUnit == 'hari',
+                    onSelected: (_) => setDialogState(() => selectedUnit = 'hari'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: selectedUnit == 'km' ? 'Contoh: 12500' : 'Contoh: 30',
+                  suffixText: selectedUnit,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.read<PosCubit>().updateItemNote(item, null);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Hapus'),
+            ),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: () {
+                final val = controller.text.trim();
+                if (val.isNotEmpty) {
+                  context.read<PosCubit>().updateItemNote(item, '$val $selectedUnit');
+                }
+                Navigator.pop(ctx);
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
       ),
     );
   }

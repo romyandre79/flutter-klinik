@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
 
 enum ButtonSize { small, medium, large }
 

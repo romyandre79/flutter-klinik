@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
-import 'package:kreatif_klinik/presentation/screens/pos/widgets/product_item_card.dart';
-import 'package:kreatif_klinik/data/models/product.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/pos/pos_state.dart';
+import 'package:kreatif_pos/presentation/screens/pos/widgets/product_item_card.dart';
+import 'package:kreatif_pos/data/models/product.dart';
+import 'package:kreatif_pos/data/models/product_unit.dart';
 
 class ServiceCatalog extends StatelessWidget {
   const ServiceCatalog({super.key});

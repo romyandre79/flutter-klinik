@@ -43,6 +43,7 @@ class OrderItem extends Equatable {
       'discount': discount,
       'subtotal': subtotal,
       'unit_id': unitId,
+      'note': note,
     };
   }
 

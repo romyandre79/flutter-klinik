@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/data/repositories/user_repository.dart';
-import 'package:kreatif_klinik/logic/cubits/user/user_state.dart';
-import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_pos/data/models/user.dart';
+import 'package:kreatif_pos/data/repositories/user_repository.dart';
+import 'package:kreatif_pos/logic/cubits/user/user_state.dart';
+import 'package:kreatif_pos/core/constants/app_constants.dart';
 
 class UserCubit extends Cubit<UserState> {
   final UserRepository _userRepository;

@@ -1,5 +1,5 @@
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/data/models/stock_transfer.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
+import 'package:kreatif_pos/data/models/stock_transfer.dart';
 import 'package:sqflite/sqflite.dart';
 
 class StockTransferRepository {

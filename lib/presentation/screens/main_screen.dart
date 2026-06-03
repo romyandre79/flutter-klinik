@@ -1,28 +1,28 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_klinik/core/theme/app_theme.dart';
-import 'package:kreatif_klinik/data/models/user.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/user/user_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/report/report_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/dashboard/dashboard_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/dashboard/dashboard_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/reports/report_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/settings/settings_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/pos/pos_screen.dart';
-import 'package:kreatif_klinik/presentation/screens/orders/order_list_screen.dart';
-import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
-import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
-import 'package:kreatif_klinik/presentation/screens/purchasing/purchase_order_list_screen.dart';
-import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_cubit.dart';
-import 'package:kreatif_klinik/data/repositories/product_repository.dart';
-import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/supplier_repository.dart';
-import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
-import 'package:kreatif_klinik/data/repositories/order_repository.dart';
-import 'package:kreatif_klinik/data/repositories/payment_repository.dart';
+import 'package:kreatif_pos/core/theme/app_theme.dart';
+import 'package:kreatif_pos/data/models/user.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_pos/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/user/user_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/report/report_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/dashboard/dashboard_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/dashboard/dashboard_screen.dart';
+import 'package:kreatif_pos/presentation/screens/reports/report_screen.dart';
+import 'package:kreatif_pos/presentation/screens/settings/settings_screen.dart';
+import 'package:kreatif_pos/presentation/screens/pos/pos_screen.dart';
+import 'package:kreatif_pos/presentation/screens/orders/order_list_screen.dart';
+import 'package:kreatif_pos/logic/cubits/pos/pos_cubit.dart';
+import 'package:kreatif_pos/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_pos/presentation/screens/purchasing/purchase_order_list_screen.dart';
+import 'package:kreatif_pos/logic/cubits/purchase_order/purchase_order_cubit.dart';
+import 'package:kreatif_pos/data/repositories/product_repository.dart';
+import 'package:kreatif_pos/data/repositories/purchase_order_repository.dart';
+import 'package:kreatif_pos/data/repositories/supplier_repository.dart';
+import 'package:kreatif_pos/data/repositories/customer_repository.dart';
+import 'package:kreatif_pos/data/repositories/order_repository.dart';
+import 'package:kreatif_pos/data/repositories/payment_repository.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -157,7 +157,7 @@ class _MainScreenState extends State<MainScreen> {
 
         if (isOwner || user.role == UserRole.kasir) {
           if (isLargeScreen) {
-            // Add Klinik Screen for large screens
+            // Add Otopart Screen for large screens
             // Initialize PosCubit if not already done
             _posCubit ??= PosCubit(context.read<ProductRepository>())..loadProducts();
             
@@ -259,7 +259,7 @@ class _MainScreenState extends State<MainScreen> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() => _currentIndex = index);
-                    // If switching to Klinik (Kasir) tab, reload products
+                    // If switching to Otopart (Kasir) tab, reload products
                     if (item.label == 'Kasir') {
                       _posCubit?.loadProducts();
                     } else if (item.label == 'Dashboard') {

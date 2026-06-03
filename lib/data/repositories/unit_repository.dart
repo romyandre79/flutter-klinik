@@ -1,5 +1,5 @@
-import 'package:kreatif_klinik/data/database/database_helper.dart';
-import 'package:kreatif_klinik/data/models/unit.dart';
+import 'package:kreatif_pos/data/database/database_helper.dart';
+import 'package:kreatif_pos/data/models/unit.dart';
 
 class UnitRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;

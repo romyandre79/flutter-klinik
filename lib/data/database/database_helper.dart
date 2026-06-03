@@ -253,6 +253,36 @@ class DatabaseHelper {
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
       )
     ''');
+
+    // Purchase Order Item Batches table
+    await db.execute('''
+      CREATE TABLE purchase_order_item_batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchase_order_item_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        batch_no TEXT NOT NULL,
+        expired_date TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (purchase_order_item_id) REFERENCES purchase_order_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Order Item Batches table
+    await db.execute('''
+      CREATE TABLE order_item_batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_item_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        batch_no TEXT NOT NULL,
+        expired_date TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
     
     // Create Units table
     await db.execute('''
@@ -406,6 +436,14 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_registrations_doctor ON registrations(doctor_id)');
     await db.execute('CREATE INDEX idx_registrations_date ON registrations(registration_date)');
     await db.execute('CREATE INDEX idx_examinations_registration ON examinations(registration_id)');
+
+    // Purchase Order Item Batches indexes
+    await db.execute('CREATE INDEX idx_po_item_batches_po_item ON purchase_order_item_batches(purchase_order_item_id)');
+    await db.execute('CREATE INDEX idx_po_item_batches_product ON purchase_order_item_batches(product_id)');
+
+    // Order Item Batches indexes
+    await db.execute('CREATE INDEX idx_order_item_batches_order_item ON order_item_batches(order_item_id)');
+    await db.execute('CREATE INDEX idx_order_item_batches_product ON order_item_batches(product_id)');
   }
 
   Future<void> _seedData(Database db) async {
@@ -906,6 +944,44 @@ class DatabaseHelper {
       await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_doctor ON registrations(doctor_id)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_date ON registrations(registration_date)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_examinations_registration ON examinations(registration_id)');
+    }
+
+    if (oldVersion < 14) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS purchase_order_item_batches (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          purchase_order_item_id INTEGER NOT NULL,
+          product_id INTEGER NOT NULL,
+          batch_no TEXT NOT NULL,
+          expired_date TEXT NOT NULL,
+          quantity REAL NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (purchase_order_item_id) REFERENCES purchase_order_items(id) ON DELETE CASCADE,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_po_item_batches_po_item ON purchase_order_item_batches(purchase_order_item_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_po_item_batches_product ON purchase_order_item_batches(product_id)');
+    }
+
+    if (oldVersion < 15) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS order_item_batches (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          order_item_id INTEGER NOT NULL,
+          product_id INTEGER NOT NULL,
+          batch_no TEXT NOT NULL,
+          expired_date TEXT NOT NULL,
+          quantity REAL NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_order_item_batches_order_item ON order_item_batches(order_item_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_order_item_batches_product ON order_item_batches(product_id)');
     }
   }
 

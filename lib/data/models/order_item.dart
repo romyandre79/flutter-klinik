@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:kreatif_klinik/data/models/order_item_batch.dart';
 
 class OrderItem extends Equatable {
   final int? id;
@@ -12,6 +13,7 @@ class OrderItem extends Equatable {
   final int discount;
   final int subtotal;
   final int? unitId; // New field for multi-unit stock tracking
+  final List<OrderItemBatch> batches; // Selected batches
 
   const OrderItem({
     this.id,
@@ -25,6 +27,7 @@ class OrderItem extends Equatable {
     this.discount = 0,
     required this.subtotal,
     this.unitId,
+    this.batches = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -43,7 +46,7 @@ class OrderItem extends Equatable {
     };
   }
 
-  factory OrderItem.fromMap(Map<String, dynamic> map) {
+  factory OrderItem.fromMap(Map<String, dynamic> map, {List<OrderItemBatch> batches = const []}) {
     return OrderItem(
       id: map['id'] as int?,
       orderId: map['order_id'] as int,
@@ -56,6 +59,7 @@ class OrderItem extends Equatable {
       discount: (map['discount'] as int?) ?? 0,
       subtotal: map['subtotal'] as int,
       unitId: map['unit_id'] as int?,
+      batches: batches,
     );
   }
 
@@ -71,6 +75,7 @@ class OrderItem extends Equatable {
     int? discount,
     int? subtotal,
     int? unitId,
+    List<OrderItemBatch>? batches,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -84,6 +89,7 @@ class OrderItem extends Equatable {
       discount: discount ?? this.discount,
       subtotal: subtotal ?? this.subtotal,
       unitId: unitId ?? this.unitId,
+      batches: batches ?? this.batches,
     );
   }
 
@@ -107,5 +113,6 @@ class OrderItem extends Equatable {
         discount,
         subtotal,
         unitId,
+        batches,
       ];
 }

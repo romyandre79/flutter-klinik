@@ -4,19 +4,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_klinik/core/theme/app_theme.dart';
 import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
 import 'package:kreatif_klinik/data/models/order_item.dart';
-import 'package:kreatif_klinik/data/models/product_unit.dart';
 
 import 'package:kreatif_klinik/data/models/payment.dart';
 import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
 import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
 import 'package:kreatif_klinik/logic/cubits/pos/pos_cubit.dart';
 import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
-import 'package:kreatif_klinik/data/models/customer.dart';
 import 'package:kreatif_klinik/data/models/order.dart'; 
 import 'package:kreatif_klinik/data/models/cart_item.dart';
 import 'package:kreatif_klinik/presentation/widgets/payment_dialog.dart';
 import 'package:kreatif_klinik/presentation/widgets/searchable_customer_picker.dart';
 import 'package:kreatif_klinik/presentation/widgets/searchable_unit_picker.dart';
+import 'package:kreatif_klinik/presentation/screens/pos/widgets/select_sales_batches_dialog.dart';
 
 class CartPanel extends StatelessWidget {
   const CartPanel({super.key});
@@ -50,6 +49,24 @@ class CartPanel extends StatelessWidget {
             SnackBar(
               content: Text(
                   'Stok ${item.product.name} tidak mencukupi (Sisa: ${currentStock.toStringAsFixed(2)})'),
+              backgroundColor: AppThemeColors.error,
+            ),
+          );
+          return;
+        }
+      }
+    }
+    
+    // Validate Batches
+    for (final item in state.cartItems) {
+      if (item.product.isGoods && item.batches.isNotEmpty) {
+        final double sumOfBatches = item.batches.fold(0.0, (sum, b) => sum + b.quantity);
+        if (sumOfBatches != item.quantity) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Kuantitas batch untuk "${item.product.name}" ($sumOfBatches) tidak cocok dengan jumlah di keranjang (${item.quantity}). Harap sesuaikan batch.',
+              ),
               backgroundColor: AppThemeColors.error,
             ),
           );
@@ -96,6 +113,7 @@ class CartPanel extends StatelessWidget {
         pricePerUnit: item.selectedUnit?.price ?? item.product.price,
         discount: item.discount,
         subtotal: item.subtotal,
+        batches: item.batches,
       );
     }).toList();
 
@@ -294,6 +312,50 @@ class CartPanel extends StatelessWidget {
                                         ),
                                       ),
                                     ),
+                                    if (item.product.isGoods) ...[
+                                      const SizedBox(height: 4),
+                                      if (item.batches.isEmpty)
+                                        TextButton.icon(
+                                          onPressed: () => _showBatchPickerDialog(context, item),
+                                          icon: const Icon(Icons.inventory_2_outlined, size: 14),
+                                          label: const Text('Pilih Batch (Opsional)'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: AppThemeColors.primary,
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(50, 24),
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            textStyle: AppTypography.labelSmall,
+                                          ),
+                                        )
+                                      else
+                                        InkWell(
+                                          onTap: () => _showBatchPickerDialog(context, item),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 2),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Batch Terpilih:',
+                                                  style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.bold),
+                                                ),
+                                                ...item.batches.map((b) => Text(
+                                                  '• ${b.batchNo} (${b.quantity.toStringAsFixed(0)} ${item.selectedUnit?.unitName ?? item.product.unit})',
+                                                  style: AppTypography.labelSmall.copyWith(color: Colors.green.shade700),
+                                                )),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  'Ubah Batch',
+                                                  style: AppTypography.labelSmall.copyWith(
+                                                    color: AppThemeColors.primary,
+                                                    decoration: TextDecoration.underline,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -470,6 +532,18 @@ class CartPanel extends StatelessWidget {
             child: const Text('Simpan'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showBatchPickerDialog(BuildContext context, CartItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => SelectSalesBatchesDialog(
+        cartItem: item,
+        onSave: (selectedBatches) {
+          context.read<PosCubit>().updateItemBatches(item, selectedBatches);
+        },
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:kreatif_klinik/data/models/purchase_order.dart';
 import 'package:kreatif_klinik/data/models/purchase_order_item.dart';
 import 'package:kreatif_klinik/data/models/supplier.dart';
 import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/data/models/purchase_order_item_batch.dart';
 
 class PurchaseOrderRepository {
   final DatabaseHelper _databaseHelper;
@@ -57,7 +58,23 @@ class PurchaseOrderRepository {
       whereArgs: [id],
     );
 
-    final items = itemsResult.map((map) => PurchaseOrderItem.fromMap(map)).toList();
+    List<PurchaseOrderItem> items = [];
+    for (final itemMap in itemsResult) {
+      final poItem = PurchaseOrderItem.fromMap(itemMap);
+      
+      // Get Batches for this item
+      final batchesResult = await db.query(
+        'purchase_order_item_batches',
+        where: 'purchase_order_item_id = ?',
+        whereArgs: [poItem.id],
+      );
+      
+      final itemBatches = batchesResult
+          .map((map) => PurchaseOrderItemBatch.fromMap(map))
+          .toList();
+          
+      items.add(poItem.copyWith(batches: itemBatches));
+    }
 
     // Construct Supplier
     final supplier = poMap['supplier_name'] != null 
@@ -144,14 +161,126 @@ class PurchaseOrderRepository {
     });
   }
 
-  // Delete PO (Cascade delete items handled by DB schema if configured, but safe to do manual or rely on FK)
-  // FK is ON DELETE CASCADE in schema, so items will be deleted automatically.
+  // Receive PO with multi-batch details
+  Future<void> receivePurchaseOrder(int id, List<PurchaseOrderItemBatch> batches) async {
+    final db = await _databaseHelper.database;
+
+    await db.transaction((txn) async {
+      // 1. Update PO status to received
+      await txn.update(
+        'purchase_orders',
+        {
+          'status': 'received',
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      // 2. Insert batches and update product stocks
+      for (final batch in batches) {
+        // Insert batch details
+        await txn.insert('purchase_order_item_batches', {
+          'purchase_order_item_id': batch.purchaseOrderItemId,
+          'product_id': batch.productId,
+          'batch_no': batch.batchNo,
+          'expired_date': batch.expiredDate.toIso8601String(),
+          'quantity': batch.quantity,
+        });
+
+        // Get the unit from purchase_order_item to update the correct product unit stock
+        final poItems = await txn.query(
+          'purchase_order_items',
+          columns: ['unit'],
+          where: 'id = ?',
+          whereArgs: [batch.purchaseOrderItemId],
+        );
+
+        final unitName = poItems.isNotEmpty ? (poItems.first['unit'] as String? ?? 'pcs') : 'pcs';
+
+        // Update product stock by unit name
+        await _productRepository.updateStockByUnitName(
+          txn,
+          batch.productId,
+          unitName,
+          batch.quantity,
+        );
+      }
+    });
+  }
+
+  // Delete PO
+  // If PO is received, revert the stock updates before deleting it
   Future<void> deletePurchaseOrder(int id) async {
     final db = await _databaseHelper.database;
-    await db.delete(
-      'purchase_orders',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    
+    await db.transaction((txn) async {
+      // Get the PO to check its status
+      final poResult = await txn.query(
+        'purchase_orders',
+        columns: ['status'],
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (poResult.isNotEmpty) {
+        final status = poResult.first['status'] as String;
+
+        if (status == 'received') {
+          // Find batches for the items in this PO
+          final batches = await txn.rawQuery('''
+            SELECT b.*, i.unit 
+            FROM purchase_order_item_batches b
+            JOIN purchase_order_items i ON b.purchase_order_item_id = i.id
+            WHERE i.purchase_order_id = ?
+          ''', [id]);
+
+          if (batches.isNotEmpty) {
+            for (final batch in batches) {
+              final productId = batch['product_id'] as int;
+              final quantity = (batch['quantity'] as num).toDouble();
+              final unitName = batch['unit'] as String? ?? 'pcs';
+
+              // Deduct stock (negative quantity)
+              await _productRepository.updateStockByUnitName(
+                txn,
+                productId,
+                unitName,
+                -quantity,
+              );
+            }
+          } else {
+            // Fallback: If no batches found (e.g. old PO received before migration), revert using PO items
+            final items = await txn.query(
+              'purchase_order_items',
+              where: 'purchase_order_id = ?',
+              whereArgs: [id],
+            );
+
+            for (final item in items) {
+              final productId = item['product_id'] as int?;
+              final quantity = item['quantity'] as int;
+
+              if (productId != null) {
+                final unitName = item['unit'] as String? ?? 'pcs';
+                await _productRepository.updateStockByUnitName(
+                  txn,
+                  productId,
+                  unitName,
+                  -quantity.toDouble(),
+                );
+              }
+            }
+          }
+        }
+      }
+
+      // Delete PO (cascade delete will handle items and batches in DB)
+      await txn.delete(
+        'purchase_orders',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 }

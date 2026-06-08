@@ -1,5 +1,5 @@
-import 'package:kreatif_pos/data/database/database_helper.dart';
-import 'package:kreatif_pos/data/models/customer.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
 
 class CustomerRepository {
   final DatabaseHelper _databaseHelper;

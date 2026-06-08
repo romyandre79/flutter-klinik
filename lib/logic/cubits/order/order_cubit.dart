@@ -1,15 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_pos/core/services/notification_service.dart';
-import 'package:kreatif_pos/core/utils/invoice_generator.dart';
-import 'package:kreatif_pos/data/models/order.dart';
-import 'package:kreatif_pos/data/models/order_item.dart';
-import 'package:kreatif_pos/data/models/payment.dart';
-import 'package:kreatif_pos/data/repositories/customer_repository.dart';
-import 'package:kreatif_pos/data/repositories/order_repository.dart';
-import 'package:kreatif_pos/data/repositories/payment_repository.dart';
-import 'package:kreatif_pos/data/repositories/product_repository.dart';
-import 'package:kreatif_pos/logic/cubits/order/order_state.dart';
-import 'package:kreatif_pos/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/core/services/notification_service.dart';
+import 'package:kreatif_klinik/core/utils/invoice_generator.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/payment.dart';
+import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
+import 'package:kreatif_klinik/data/repositories/order_repository.dart';
+import 'package:kreatif_klinik/data/repositories/payment_repository.dart';
+import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
 
 class OrderCubit extends Cubit<OrderState> {
   final OrderRepository _orderRepository;

@@ -3,12 +3,12 @@ import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart' show SharePlus, ShareParams, XFile;
-import 'package:kreatif_pos/data/models/order.dart';
-import 'package:kreatif_pos/data/models/purchase_order.dart';
-import 'package:kreatif_pos/data/models/product.dart';
-import 'package:kreatif_pos/core/utils/currency_formatter.dart';
-import 'package:kreatif_pos/core/utils/date_formatter.dart';
-import 'package:kreatif_pos/logic/cubits/report/report_state.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/purchase_order.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/logic/cubits/report/report_state.dart';
 
 
 class ExportService {
@@ -275,11 +275,13 @@ class ExportService {
     sheet.cell(CellIndex.indexByString('G1')).value = TextCellValue('Harga Satuan');
     sheet.cell(CellIndex.indexByString('H1')).value = TextCellValue('Subtotal');
     sheet.cell(CellIndex.indexByString('I1')).value = TextCellValue('Total Transaksi');
+    sheet.cell(CellIndex.indexByString('J1')).value = TextCellValue('No Batch');
+    sheet.cell(CellIndex.indexByString('K1')).value = TextCellValue('Expire Date');
 
     int row = 2;
     for (final purchase in purchases) {
       final supplierName = purchase.supplier?.name ?? 'Unknown Supplier';
-      
+
       if (purchase.items.isEmpty) {
         sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
         sheet.cell(CellIndex.indexByString('B$row')).value =
@@ -291,25 +293,52 @@ class ExportService {
       } else {
         bool firstItem = true;
         for (final item in purchase.items) {
-          sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
-          sheet.cell(CellIndex.indexByString('B$row')).value =
-              TextCellValue(DateFormatter.formatDate(purchase.orderDate));
-          sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
-          
-          sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(item.itemName);
-          sheet.cell(CellIndex.indexByString('E$row')).value = IntCellValue(item.quantity);
-          sheet.cell(CellIndex.indexByString('F$row')).value = TextCellValue(item.unit);
-          sheet.cell(CellIndex.indexByString('G$row')).value =
-              TextCellValue(CurrencyFormatter.format(item.cost));
-          sheet.cell(CellIndex.indexByString('H$row')).value =
-              TextCellValue(CurrencyFormatter.format(item.subtotal));
-          
-          if (firstItem) {
-             sheet.cell(CellIndex.indexByString('I$row')).value =
-                TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
-             firstItem = false;
+          if (item.batches.isEmpty) {
+            sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
+            sheet.cell(CellIndex.indexByString('B$row')).value =
+                TextCellValue(DateFormatter.formatDate(purchase.orderDate));
+            sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
+            sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(item.itemName);
+            sheet.cell(CellIndex.indexByString('E$row')).value = IntCellValue(item.quantity);
+            sheet.cell(CellIndex.indexByString('F$row')).value = TextCellValue(item.unit);
+            sheet.cell(CellIndex.indexByString('G$row')).value =
+                TextCellValue(CurrencyFormatter.format(item.cost));
+            sheet.cell(CellIndex.indexByString('H$row')).value =
+                TextCellValue(CurrencyFormatter.format(item.subtotal));
+            if (firstItem) {
+              sheet.cell(CellIndex.indexByString('I$row')).value =
+                  TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+              firstItem = false;
+            }
+            row++;
+          } else {
+            bool firstBatch = true;
+            for (final batch in item.batches) {
+              sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
+              sheet.cell(CellIndex.indexByString('B$row')).value =
+                  TextCellValue(DateFormatter.formatDate(purchase.orderDate));
+              sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
+              sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(item.itemName);
+              sheet.cell(CellIndex.indexByString('F$row')).value = TextCellValue(item.unit);
+              sheet.cell(CellIndex.indexByString('G$row')).value =
+                  TextCellValue(CurrencyFormatter.format(item.cost));
+              if (firstBatch) {
+                sheet.cell(CellIndex.indexByString('E$row')).value = IntCellValue(item.quantity);
+                sheet.cell(CellIndex.indexByString('H$row')).value =
+                    TextCellValue(CurrencyFormatter.format(item.subtotal));
+                if (firstItem) {
+                  sheet.cell(CellIndex.indexByString('I$row')).value =
+                      TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+                  firstItem = false;
+                }
+                firstBatch = false;
+              }
+              sheet.cell(CellIndex.indexByString('J$row')).value = TextCellValue(batch.batchNo);
+              sheet.cell(CellIndex.indexByString('K$row')).value =
+                  TextCellValue(DateFormatter.formatDate(batch.expiredDate));
+              row++;
+            }
           }
-          row++;
         }
       }
     }

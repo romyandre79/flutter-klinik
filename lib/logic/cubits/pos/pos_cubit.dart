@@ -271,6 +271,32 @@ class PosCubit extends Cubit<PosState> {
     }
   }
 
+  void updateItemNote(CartItem item, String? note) {
+    if (state is PosLoaded) {
+      final currentState = state as PosLoaded;
+      final currentCart = List<CartItem>.from(currentState.cartItems);
+      final index = currentCart.indexOf(item);
+      if (index >= 0) {
+        currentCart[index] = CartItem(
+          product: item.product,
+          quantity: item.quantity,
+          discount: item.discount,
+          note: note,
+          selectedUnit: item.selectedUnit,
+          batches: item.batches,
+        );
+        emit(currentState.copyWith(cartItems: currentCart));
+      }
+    }
+  }
+
+  void setNomorPolisi(String? value) {
+    if (state is PosLoaded) {
+      final currentState = state as PosLoaded;
+      emit(currentState.copyWith(nomorPolisi: value));
+    }
+  }
+
   // Update selected batches for a cart item
   void updateItemBatches(CartItem item, List<OrderItemBatch> batches) {
     if (state is PosLoaded) {

@@ -650,3 +650,50 @@ class _CustomerSelector extends StatelessWidget {
     );
   }
 }
+
+class _NomorPolisiInput extends StatefulWidget {
+  const _NomorPolisiInput();
+
+  @override
+  State<_NomorPolisiInput> createState() => _NomorPolisiInputState();
+}
+
+class _NomorPolisiInputState extends State<_NomorPolisiInput> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PosCubit, PosState>(
+      builder: (context, state) {
+        if (state is! PosLoaded) return const SizedBox.shrink();
+
+        final current = state.nomorPolisi ?? '';
+        if (_controller.text != current) {
+          _controller.text = current;
+          _controller.selection = TextSelection.collapsed(offset: current.length);
+        }
+
+        return TextField(
+          controller: _controller,
+          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(
+            labelText: 'Nomor Polisi',
+            hintText: 'Contoh: B 1234 ABC',
+            prefixIcon: Icon(Icons.directions_car_outlined),
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) {
+            context.read<PosCubit>().setNomorPolisi(val.isEmpty ? null : val);
+          },
+        );
+      },
+    );
+  }
+}

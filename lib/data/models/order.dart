@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:kreatif_pos/data/models/order_item.dart';
-import 'package:kreatif_pos/data/models/payment.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/payment.dart';
 
 enum OrderStatus { pending, process, ready, done }
 

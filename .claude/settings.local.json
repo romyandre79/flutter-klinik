@@ -9,7 +9,14 @@
       "PowerShell(head *)",
       "PowerShell(Get-ChildItem *)",
       "PowerShell(where.exe sqlite3 2>$null; if \\(-not $?\\) { \"sqlite3 not found in PATH\" })",
-      "PowerShell(python --version 2>&1)"
+      "PowerShell(python --version 2>&1)",
+      "Bash(xargs grep -l \"laporan.*pembelian\\\\|pembelian.*laporan\")",
+      "Bash(flutter analyze *)",
+      "Bash(Get-ChildItem \"C:\\\\lara\\\\www\\\\kreatif\\\\kreatif-klinik\\\\windows\\\\flutter\\\\ephemeral\\\\.plugin_symlinks\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs sed -i 's/package:kreatif_klinik\\\\//package:kreatif_pos\\\\//g')",
+      "Bash(xargs sed -i 's/package:kreatif_pos\\\\//package:kreatif_klinik\\\\//g')",
+      "Bash(flutter pub *)"
     ]
   }
 }

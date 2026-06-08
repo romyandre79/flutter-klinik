@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_pos/data/models/order.dart';
-import 'package:kreatif_pos/data/repositories/order_repository.dart';
-import 'package:kreatif_pos/data/repositories/payment_repository.dart';
-import 'package:kreatif_pos/logic/cubits/dashboard/dashboard_state.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/repositories/order_repository.dart';
+import 'package:kreatif_klinik/data/repositories/payment_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/dashboard/dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
   final OrderRepository _orderRepository;

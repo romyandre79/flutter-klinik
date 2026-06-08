@@ -1,9 +1,9 @@
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-import 'package:kreatif_pos/data/models/order.dart';
-import 'package:kreatif_pos/data/repositories/settings_repository.dart';
-import 'package:kreatif_pos/core/utils/currency_formatter.dart';
-import 'package:kreatif_pos/core/utils/date_formatter.dart';
-import 'package:kreatif_pos/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/repositories/settings_repository.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
 
 
 class StorePrint {

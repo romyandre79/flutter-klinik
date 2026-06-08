@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:kreatif_pos/core/api/api_service.dart';
-import 'package:kreatif_pos/core/services/log_service.dart';
-import 'package:kreatif_pos/core/services/session_service.dart';
-import 'package:kreatif_pos/data/database/database_helper.dart';
-import 'package:kreatif_pos/data/models/customer.dart';
-import 'package:kreatif_pos/data/models/order.dart';
-import 'package:kreatif_pos/data/models/order_item.dart';
-import 'package:kreatif_pos/data/models/product.dart';
-import 'package:kreatif_pos/data/models/supplier.dart';
+import 'package:kreatif_klinik/core/api/api_service.dart';
+import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/core/services/log_service.dart';
+import 'package:kreatif_klinik/core/services/session_service.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/models/customer.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/order_item.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/data/models/supplier.dart';
 
 class SyncService {
   final ApiService _apiService;

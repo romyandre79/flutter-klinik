@@ -1,8 +1,8 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:kreatif_pos/data/database/database_helper.dart';
+import 'package:kreatif_klinik/data/database/database_helper.dart';
 
-import 'package:kreatif_pos/data/models/product.dart';
-import 'package:kreatif_pos/data/models/product_unit.dart';
+import 'package:kreatif_klinik/data/models/product.dart';
+import 'package:kreatif_klinik/data/models/product_unit.dart';
 
 class ProductRepository {
   final DatabaseHelper _databaseHelper;

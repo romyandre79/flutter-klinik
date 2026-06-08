@@ -1,21 +1,21 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kreatif_pos/core/theme/app_theme.dart';
-import 'package:kreatif_pos/core/utils/currency_formatter.dart';
-import 'package:kreatif_pos/core/utils/date_formatter.dart';
-import 'package:kreatif_pos/core/utils/thousand_separator_formatter.dart';
-import 'package:kreatif_pos/data/models/order.dart';
-import 'package:kreatif_pos/data/models/payment.dart';
-import 'package:kreatif_pos/data/models/user.dart';
-import 'package:kreatif_pos/logic/cubits/auth/auth_cubit.dart';
-import 'package:kreatif_pos/logic/cubits/auth/auth_state.dart';
-import 'package:kreatif_pos/logic/cubits/order/order_cubit.dart';
-import 'package:kreatif_pos/logic/cubits/order/order_state.dart';
-import 'package:kreatif_pos/logic/cubits/printer/printer_cubit.dart';
-import 'package:kreatif_pos/logic/cubits/printer/printer_state.dart';
-import 'package:kreatif_pos/core/services/whatsapp_service.dart';
-import 'package:kreatif_pos/core/services/pdf_service.dart';
+import 'package:kreatif_klinik/core/theme/app_theme.dart';
+import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
+import 'package:kreatif_klinik/core/utils/date_formatter.dart';
+import 'package:kreatif_klinik/core/utils/thousand_separator_formatter.dart';
+import 'package:kreatif_klinik/data/models/order.dart';
+import 'package:kreatif_klinik/data/models/payment.dart';
+import 'package:kreatif_klinik/data/models/user.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/auth/auth_state.dart';
+import 'package:kreatif_klinik/logic/cubits/order/order_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/order/order_state.dart';
+import 'package:kreatif_klinik/logic/cubits/printer/printer_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/printer/printer_state.dart';
+import 'package:kreatif_klinik/core/services/whatsapp_service.dart';
+import 'package:kreatif_klinik/core/services/pdf_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class OrderDetailScreen extends StatefulWidget {

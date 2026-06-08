@@ -14,6 +14,7 @@ class OrderItem extends Equatable {
   final int subtotal;
   final int? unitId; // New field for multi-unit stock tracking
   final List<OrderItemBatch> batches; // Selected batches
+  final String? note;
 
   const OrderItem({
     this.id,
@@ -28,6 +29,7 @@ class OrderItem extends Equatable {
     required this.subtotal,
     this.unitId,
     this.batches = const [],
+    this.note,
   });
 
   Map<String, dynamic> toMap() {
@@ -61,6 +63,7 @@ class OrderItem extends Equatable {
       subtotal: map['subtotal'] as int,
       unitId: map['unit_id'] as int?,
       batches: batches,
+      note: map['note'] as String?,
     );
   }
 
@@ -77,6 +80,7 @@ class OrderItem extends Equatable {
     int? subtotal,
     int? unitId,
     List<OrderItemBatch>? batches,
+    Object? note = _absent,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -91,8 +95,11 @@ class OrderItem extends Equatable {
       subtotal: subtotal ?? this.subtotal,
       unitId: unitId ?? this.unitId,
       batches: batches ?? this.batches,
+      note: note == _absent ? this.note : note as String?,
     );
   }
+
+  static const _absent = Object();
 
   // Helper: Calculate subtotal from quantity and price
   static int calculateSubtotal(double quantity, int pricePerUnit, int discount) {
@@ -115,5 +122,6 @@ class OrderItem extends Equatable {
         subtotal,
         unitId,
         batches,
+        note,
       ];
 }

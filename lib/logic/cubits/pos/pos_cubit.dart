@@ -4,6 +4,7 @@ import 'package:kreatif_klinik/data/models/product.dart';
 import 'package:kreatif_klinik/data/models/product_unit.dart';
 import 'package:kreatif_klinik/data/models/customer.dart';
 import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/data/models/order_item_batch.dart';
 import 'package:kreatif_klinik/logic/cubits/pos/pos_state.dart';
 
 class PosCubit extends Cubit<PosState> {
@@ -267,6 +268,46 @@ class PosCubit extends Cubit<PosState> {
     if (state is PosLoaded) {
       final currentState = state as PosLoaded;
       emit(currentState.copyWith(orderDiscount: discountAmount));
+    }
+  }
+
+  void updateItemNote(CartItem item, String? note) {
+    if (state is PosLoaded) {
+      final currentState = state as PosLoaded;
+      final currentCart = List<CartItem>.from(currentState.cartItems);
+      final index = currentCart.indexOf(item);
+      if (index >= 0) {
+        currentCart[index] = CartItem(
+          product: item.product,
+          quantity: item.quantity,
+          discount: item.discount,
+          note: note,
+          selectedUnit: item.selectedUnit,
+          batches: item.batches,
+        );
+        emit(currentState.copyWith(cartItems: currentCart));
+      }
+    }
+  }
+
+  void setNomorPolisi(String? value) {
+    if (state is PosLoaded) {
+      final currentState = state as PosLoaded;
+      emit(currentState.copyWith(nomorPolisi: value));
+    }
+  }
+
+  // Update selected batches for a cart item
+  void updateItemBatches(CartItem item, List<OrderItemBatch> batches) {
+    if (state is PosLoaded) {
+      final currentState = state as PosLoaded;
+      final currentCart = List<CartItem>.from(currentState.cartItems);
+
+      final index = currentCart.indexOf(item);
+      if (index >= 0) {
+        currentCart[index] = currentCart[index].copyWith(batches: batches);
+        emit(currentState.copyWith(cartItems: currentCart));
+      }
     }
   }
 }

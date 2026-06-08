@@ -4,6 +4,7 @@ import 'package:kreatif_klinik/logic/cubits/report/report_state.dart';
 import 'package:kreatif_klinik/data/models/order_item.dart';
 import 'package:kreatif_klinik/data/models/purchase_order.dart';
 import 'package:kreatif_klinik/data/models/purchase_order_item.dart';
+import 'package:kreatif_klinik/data/models/purchase_order_item_batch.dart';
 import 'package:kreatif_klinik/data/models/supplier.dart';
 import 'package:kreatif_klinik/data/models/product.dart';
 
@@ -312,14 +313,23 @@ class ReportRepository {
         purchase = purchase.copyWith(supplier: supplier);
       }
 
-      // Get items
+      // Get items with batches
       final itemMaps = await db.query(
         'purchase_order_items',
         where: 'purchase_order_id = ?',
         whereArgs: [purchase.id],
       );
 
-      final items = itemMaps.map((m) => PurchaseOrderItem.fromMap(m)).toList();
+      final items = <PurchaseOrderItem>[];
+      for (final itemMap in itemMaps) {
+        final batchMaps = await db.query(
+          'purchase_order_item_batches',
+          where: 'purchase_order_item_id = ?',
+          whereArgs: [itemMap['id']],
+        );
+        final batches = batchMaps.map((b) => PurchaseOrderItemBatch.fromMap(b)).toList();
+        items.add(PurchaseOrderItem.fromMap(itemMap, batches: batches));
+      }
       purchases.add(purchase.copyWith(items: items));
     }
 

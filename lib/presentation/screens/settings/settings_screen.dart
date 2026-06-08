@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:kreatif_klinik/core/constants/app_constants.dart';
@@ -29,6 +31,7 @@ import 'package:kreatif_klinik/presentation/screens/settings/pengumuman_template
 import 'package:kreatif_klinik/logic/sync/sync_cubit.dart';
 import 'package:kreatif_klinik/logic/sync/sync_state.dart';
 import 'package:kreatif_klinik/core/services/session_service.dart';
+import 'package:kreatif_klinik/presentation/screens/settings/doctor_list_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -461,66 +464,124 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           // Store Info Section
                           _buildSection(
                             title: 'Informasi Apotik/Klinik',
-                            children: [
-                              _buildSettingTile(
+                            children: [                              _buildSettingTile(
                                 context: context,
                                 icon: Icons.store,
-                                title: 'Nama Apotik/Klinik',
-                                subtitle:
-                                    storeInfo?.name ??
-                                    AppConstants.defaultStoreName,
-                                onTap: () => _showEditDialog(
-                                  title: 'Ubah Data Nama Apotik/Klinik',
-                                  currentValue:
-                                      storeInfo?.name ??
-                                      AppConstants.defaultStoreName,
-                                  hint: 'Masukkan nama Apotik/Klinik',
+                                title: 'Nama Toko / Klinik',
+                                subtitle: storeInfo?.name ?? AppConstants.defaultStoreName,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
+                                  title: 'Ubah Data Nama Toko / Klinik',
+                                  currentValue: storeInfo?.name ?? AppConstants.defaultStoreName,
+                                  hint: 'Masukkan nama',
                                   icon: Icons.store,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateStoreName(value),
-                                ),
+                                  onSave: (value) => _settingsCubit.updateStoreName(value),
+                                ) : null,
                               ),
                               _buildDivider(),
                               _buildSettingTile(
                                 context: context,
                                 icon: Icons.location_on,
                                 title: 'Alamat',
-                                subtitle:
-                                    storeInfo?.address ??
-                                    AppConstants.defaultStoreAddress,
-                                onTap: () => _showEditDialog(
+                                subtitle: storeInfo?.address ?? AppConstants.defaultStoreAddress,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
                                   title: 'Ubah Data Alamat',
-                                  currentValue:
-                                      storeInfo?.address ??
-                                      AppConstants.defaultStoreAddress,
-                                  hint: 'Masukkan alamat Apotik/Klinik',
+                                  currentValue: storeInfo?.address ?? AppConstants.defaultStoreAddress,
+                                  hint: 'Masukkan alamat',
                                   icon: Icons.location_on,
                                   maxLines: 2,
-                                  onSave: (value) => _settingsCubit
-                                      .updateStoreAddress(value),
-                                ),
+                                  onSave: (value) => _settingsCubit.updateStoreAddress(value),
+                                ) : null,
                               ),
                               _buildDivider(),
                               _buildSettingTile(
                                 context: context,
                                 icon: Icons.phone,
                                 title: 'Nomor HP',
-                                subtitle:
-                                    storeInfo?.phone ??
-                                    AppConstants.defaultStorePhone,
-                                onTap: () => _showEditDialog(
+                                subtitle: storeInfo?.phone ?? AppConstants.defaultStorePhone,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
                                   title: 'Ubah Data Nomor HP',
-                                  currentValue:
-                                      storeInfo?.phone ??
-                                      AppConstants.defaultStorePhone,
+                                  currentValue: storeInfo?.phone ?? AppConstants.defaultStorePhone,
                                   hint: 'Masukkan nomor HP',
                                   icon: Icons.phone,
                                   keyboardType: TextInputType.phone,
-                                  onSave: (value) =>
-                                      _settingsCubit.updateStorePhone(value),
-                                ),
+                                  onSave: (value) => _settingsCubit.updateStorePhone(value),
+                                ) : null,
                               ),
-                            ],
+                              _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.badge_outlined,
+                                title: 'ID Cabang',
+                                subtitle: (storeInfo?.branchId == null || storeInfo!.branchId.isEmpty)
+                                    ? 'Belum diatur'
+                                    : storeInfo.branchId,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
+                                  title: 'Ubah Data ID Cabang',
+                                  currentValue: storeInfo?.branchId ?? '',
+                                  hint: 'Masukkan ID Cabang',
+                                  icon: Icons.badge_outlined,
+                                  onSave: (value) => _settingsCubit.updateBranchId(value),
+                                ) : null,
+                              ),
+                              _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.code,
+                                title: 'Kode Cabang',
+                                subtitle: (storeInfo?.branchCode == null || storeInfo!.branchCode.isEmpty)
+                                    ? 'Belum diatur'
+                                    : storeInfo.branchCode,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
+                                  title: 'Ubah Data Kode Cabang',
+                                  currentValue: storeInfo?.branchCode ?? '',
+                                  hint: 'Masukkan Kode Cabang',
+                                  icon: Icons.code,
+                                  onSave: (value) => _settingsCubit.updateBranchCode(value),
+                                ) : null,
+                              ),
+                              _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.person_pin,
+                                title: 'Nama Customer',
+                                subtitle: (storeInfo?.customerName == null || storeInfo!.customerName.isEmpty)
+                                    ? 'Belum diatur'
+                                    : storeInfo.customerName,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
+                                  title: 'Ubah Nama Customer',
+                                  currentValue: storeInfo?.customerName ?? '',
+                                  hint: 'Masukkan Nama Customer',
+                                  icon: Icons.person_pin,
+                                  onSave: (value) => _settingsCubit.updateCustomerName(value),
+                                ) : null,
+                              ),
+                              _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.chat_bubble_outline,
+                                title: 'No WA Customer',
+                                subtitle: (storeInfo?.customerWa == null || storeInfo!.customerWa.isEmpty)
+                                    ? 'Belum diatur'
+                                    : storeInfo.customerWa,
+                                locked: !AppConstants.isDemoMode,
+                                onTap: AppConstants.isDemoMode ? () => _showEditDialog(
+                                  title: 'Ubah No WA Customer',
+                                  currentValue: storeInfo?.customerWa ?? '',
+                                  hint: 'Masukkan No WA Customer',
+                                  icon: Icons.chat_bubble_outline,
+                                  keyboardType: TextInputType.phone,
+                                  onSave: (value) => _settingsCubit.updateCustomerWa(value),
+                                ) : null,
+                              ),
+                              _buildDivider(),
+                              _buildDeviceKeyTile(storeInfo?.deviceId ?? ''),
+],
                           ),
 
                             // Service Management Section
@@ -601,6 +662,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         create: (_) => CustomerCubit(),
                                         child: CustomerListScreen(),
                                       ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              if (user != null) _buildDivider(),
+                              _buildSettingTile(
+                                context: context,
+                                icon: Icons.medical_services_outlined,
+                                title: 'Master Dokter',
+                                subtitle: 'Kelola data dokter klinik',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const DoctorListScreen(),
                                     ),
                                   );
                                 },
@@ -728,8 +804,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     context: context,
                                     icon: isLoading ? Icons.sync : Icons.cloud_sync,
                                     title: 'Sinkronisasi Data',
-                                    subtitle: isLoading 
-                                        ? (state as SyncLoading).message 
+                                    subtitle: state is SyncLoading
+                                        ? state.message
                                         : 'Upload transaksi & download master data',
                                     onTap: isLoading ? null : () => context.read<SyncCubit>().syncData(),
                                     trailing: isLoading 
@@ -1204,6 +1280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VoidCallback? onTap,
     bool showArrow = true,
     Widget? trailing,
+    bool locked = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1219,10 +1296,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppThemeColors.primarySurface,
+                  color: locked
+                      ? AppThemeColors.textSecondary.withValues(alpha: 0.08)
+                      : AppThemeColors.primarySurface,
                   borderRadius: AppRadius.smRadius,
                 ),
-                child: Icon(icon, color: AppThemeColors.primary, size: 20),
+                child: Icon(
+                  icon,
+                  color: locked ? AppThemeColors.textSecondary : AppThemeColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               // Text content
@@ -1234,6 +1317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title,
                       style: AppTypography.titleSmall.copyWith(
                         fontWeight: FontWeight.w500,
+                        color: locked ? AppThemeColors.textSecondary : null,
                       ),
                     ),
                     Text(
@@ -1252,13 +1336,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: AppSpacing.md),
                 trailing,
               ],
+              // Lock icon when locked
+              if (locked)
+                const Icon(
+                  Icons.lock_outline,
+                  color: AppThemeColors.textSecondary,
+                  size: 14,
+                ),
               // Arrow or edit icon
-              if (showArrow && onTap != null && trailing == null)
+              if (!locked && showArrow && onTap != null && trailing == null)
                 Container(
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: AppThemeColors.primarySurface,
+                    color: locked
+                      ? AppThemeColors.textSecondary.withValues(alpha: 0.08)
+                      : AppThemeColors.primarySurface,
                     borderRadius: AppRadius.smRadius,
                   ),
                   child: const Icon(
@@ -1276,4 +1369,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 
 
+
+  Widget _buildDeviceKeyTile(String deviceId) {
+    final displayKey = deviceId.isEmpty ? 'Memuat...' : deviceId;
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF6A1B9A).withValues(alpha: 0.1),
+              borderRadius: AppRadius.smRadius,
+            ),
+            child: const Icon(Icons.fingerprint, color: Color(0xFF6A1B9A), size: 20),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Device Key', style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w500)),
+                Text(displayKey, style: AppTypography.bodySmall.copyWith(
+                  color: const Color(0xFF6A1B9A), fontWeight: FontWeight.w600, letterSpacing: 1.5,
+                )),
+              ],
+            ),
+          ),
+          if (deviceId.isNotEmpty)
+            InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: deviceId));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Device Key disalin'), backgroundColor: Color(0xFF6A1B9A), duration: Duration(seconds: 2)),
+                );
+              },
+              borderRadius: AppRadius.smRadius,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6A1B9A).withValues(alpha: 0.1),
+                  borderRadius: AppRadius.smRadius,
+                ),
+                child: const Icon(Icons.copy_outlined, color: Color(0xFF6A1B9A), size: 14),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

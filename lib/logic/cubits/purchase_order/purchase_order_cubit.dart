@@ -3,6 +3,7 @@ import 'package:kreatif_klinik/data/models/purchase_order.dart';
 import 'package:kreatif_klinik/data/repositories/purchase_order_repository.dart';
 import 'package:kreatif_klinik/logic/cubits/purchase_order/purchase_order_state.dart';
 import 'package:kreatif_klinik/core/constants/app_constants.dart';
+import 'package:kreatif_klinik/data/models/purchase_order_item_batch.dart';
 
 class PurchaseOrderCubit extends Cubit<PurchaseOrderState> {
   final PurchaseOrderRepository _repository;
@@ -49,6 +50,17 @@ class PurchaseOrderCubit extends Cubit<PurchaseOrderState> {
       loadPurchaseOrders();
     } catch (e) {
       emit(PoError('Failed to update status: ${e.toString()}'));
+    }
+  }
+
+  Future<void> receivePurchaseOrder(int id, List<PurchaseOrderItemBatch> batches) async {
+    try {
+      emit(PoLoading());
+      await _repository.receivePurchaseOrder(id, batches);
+      emit(const PoOperationSuccess('Barang berhasil diterima'));
+      loadPurchaseOrders();
+    } catch (e) {
+      emit(PoError('Failed to receive purchase order: ${e.toString()}'));
     }
   }
 

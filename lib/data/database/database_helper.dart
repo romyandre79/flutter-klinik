@@ -8,7 +8,7 @@ import 'package:kreatif_klinik/core/utils/password_helper.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int _currentVersion = 11;
+  static const int _currentVersion = 13;
 
   DatabaseHelper._init();
 
@@ -139,6 +139,7 @@ class DatabaseHelper {
         total_discount INTEGER DEFAULT 0,
         paid INTEGER DEFAULT 0,
         notes TEXT,
+        nomor_polisi TEXT,
         created_by INTEGER,
         is_synced INTEGER DEFAULT 0,
         server_id INTEGER,
@@ -163,6 +164,7 @@ class DatabaseHelper {
         subtotal INTEGER NOT NULL,
         product_id INTEGER,
         unit_id INTEGER,
+        note TEXT,
         FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
         FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL,
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
@@ -254,6 +256,36 @@ class DatabaseHelper {
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
       )
     ''');
+
+    // Purchase Order Item Batches table
+    await db.execute('''
+      CREATE TABLE purchase_order_item_batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchase_order_item_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        batch_no TEXT NOT NULL,
+        expired_date TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (purchase_order_item_id) REFERENCES purchase_order_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Order Item Batches table
+    await db.execute('''
+      CREATE TABLE order_item_batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_item_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        batch_no TEXT NOT NULL,
+        expired_date TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
     
     // Create Units table
     await db.execute('''
@@ -314,6 +346,52 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create Doctors table
+    await db.execute('''
+      CREATE TABLE doctors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        specialization TEXT,
+        phone TEXT,
+        is_active INTEGER DEFAULT 1,
+        server_id INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    // Create Registrations table
+    await db.execute('''
+      CREATE TABLE registrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        registration_no TEXT UNIQUE NOT NULL,
+        customer_id INTEGER NOT NULL,
+        doctor_id INTEGER NOT NULL,
+        registration_date TEXT NOT NULL,
+        complaint TEXT,
+        status TEXT NOT NULL, -- pending, examining, completed, cancelled
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create Examinations table
+    await db.execute('''
+      CREATE TABLE examinations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        registration_id INTEGER UNIQUE NOT NULL,
+        symptoms TEXT,
+        diagnosis TEXT,
+        therapy TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes
     await _createIndexes(db);
 
@@ -355,6 +433,20 @@ class DatabaseHelper {
     // Product Units indexes
     await db.execute('CREATE INDEX idx_product_units_product ON product_units(product_id)');
     await db.execute('CREATE INDEX idx_product_units_parent ON product_units(parent_unit_id)');
+
+    // Registrations and Examinations indexes
+    await db.execute('CREATE INDEX idx_registrations_customer ON registrations(customer_id)');
+    await db.execute('CREATE INDEX idx_registrations_doctor ON registrations(doctor_id)');
+    await db.execute('CREATE INDEX idx_registrations_date ON registrations(registration_date)');
+    await db.execute('CREATE INDEX idx_examinations_registration ON examinations(registration_id)');
+
+    // Purchase Order Item Batches indexes
+    await db.execute('CREATE INDEX idx_po_item_batches_po_item ON purchase_order_item_batches(purchase_order_item_id)');
+    await db.execute('CREATE INDEX idx_po_item_batches_product ON purchase_order_item_batches(product_id)');
+
+    // Order Item Batches indexes
+    await db.execute('CREATE INDEX idx_order_item_batches_order_item ON order_item_batches(order_item_id)');
+    await db.execute('CREATE INDEX idx_order_item_batches_product ON order_item_batches(product_id)');
   }
 
   Future<void> _seedData(Database db) async {
@@ -398,6 +490,10 @@ class DatabaseHelper {
       AppConstants.keyLastInvoiceDate: '',
       AppConstants.keyLastInvoiceNumber: '0',
       'fonnte_token': '',
+      AppConstants.keyBranchId: AppConstants.defaultBranchId,
+      AppConstants.keyBranchCode: AppConstants.defaultBranchCode,
+      AppConstants.keyCustomerName: AppConstants.defaultCustomerName,
+      AppConstants.keyCustomerWa: AppConstants.defaultCustomerWa,
     };
 
     for (final entry in settings.entries) {
@@ -786,6 +882,13 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE order_items ADD COLUMN unit_id INTEGER');
     }
 
+    if (oldVersion < 13) {
+      // Add nomor_polisi to orders
+      await db.execute('ALTER TABLE orders ADD COLUMN nomor_polisi TEXT');
+      // Add note to order_items
+      await db.execute('ALTER TABLE order_items ADD COLUMN note TEXT');
+    }
+
     if (oldVersion < 12) {
       // Add sync columns to multiple tables
       await db.execute('ALTER TABLE orders ADD COLUMN is_synced INTEGER DEFAULT 0');
@@ -797,6 +900,98 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE units ADD COLUMN server_id INTEGER');
       await db.execute('ALTER TABLE purchase_orders ADD COLUMN server_id INTEGER');
       await db.execute('ALTER TABLE purchase_orders ADD COLUMN is_synced INTEGER DEFAULT 0');
+    }
+
+    if (oldVersion < 13) {
+      // Create Doctors table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS doctors (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          specialization TEXT,
+          phone TEXT,
+          is_active INTEGER DEFAULT 1,
+          server_id INTEGER,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      // Create Registrations table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS registrations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          registration_no TEXT UNIQUE NOT NULL,
+          customer_id INTEGER NOT NULL,
+          doctor_id INTEGER NOT NULL,
+          registration_date TEXT NOT NULL,
+          complaint TEXT,
+          status TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+          FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create Examinations table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS examinations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          registration_id INTEGER UNIQUE NOT NULL,
+          symptoms TEXT,
+          diagnosis TEXT,
+          therapy TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create indexes for new tables
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_customer ON registrations(customer_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_doctor ON registrations(doctor_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_registrations_date ON registrations(registration_date)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_examinations_registration ON examinations(registration_id)');
+    }
+
+    if (oldVersion < 14) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS purchase_order_item_batches (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          purchase_order_item_id INTEGER NOT NULL,
+          product_id INTEGER NOT NULL,
+          batch_no TEXT NOT NULL,
+          expired_date TEXT NOT NULL,
+          quantity REAL NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (purchase_order_item_id) REFERENCES purchase_order_items(id) ON DELETE CASCADE,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_po_item_batches_po_item ON purchase_order_item_batches(purchase_order_item_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_po_item_batches_product ON purchase_order_item_batches(product_id)');
+    }
+
+    if (oldVersion < 15) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS order_item_batches (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          order_item_id INTEGER NOT NULL,
+          product_id INTEGER NOT NULL,
+          batch_no TEXT NOT NULL,
+          expired_date TEXT NOT NULL,
+          quantity REAL NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_order_item_batches_order_item ON order_item_batches(order_item_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_order_item_batches_product ON order_item_batches(product_id)');
     }
   }
 

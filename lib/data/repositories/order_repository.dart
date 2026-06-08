@@ -4,6 +4,7 @@ import 'package:kreatif_klinik/data/models/order_item.dart';
 import 'package:kreatif_klinik/data/models/payment.dart';
 import 'package:kreatif_klinik/data/repositories/customer_repository.dart';
 import 'package:kreatif_klinik/data/repositories/product_repository.dart';
+import 'package:kreatif_klinik/data/models/order_item_batch.dart';
 
 class OrderRepository {
   final DatabaseHelper _databaseHelper;
@@ -66,7 +67,24 @@ class OrderRepository {
       where: 'order_id = ?',
       whereArgs: [id],
     );
-    final items = itemsResult.map((map) => OrderItem.fromMap(map)).toList();
+    
+    List<OrderItem> items = [];
+    for (final itemMap in itemsResult) {
+      final orderItem = OrderItem.fromMap(itemMap);
+      
+      // Get batches
+      final batchesResult = await db.query(
+        'order_item_batches',
+        where: 'order_item_id = ?',
+        whereArgs: [orderItem.id],
+      );
+      
+      final itemBatches = batchesResult
+          .map((map) => OrderItemBatch.fromMap(map))
+          .toList();
+          
+      items.add(orderItem.copyWith(batches: itemBatches));
+    }
 
     // Get payments
     final paymentsResult = await db.query(
@@ -127,7 +145,7 @@ class OrderRepository {
 
       // Insert items
       for (final item in items) {
-        await txn.insert('order_items', {
+        final orderItemId = await txn.insert('order_items', {
           'order_id': orderId,
           'service_id': item.serviceId,
           'product_id': item.productId,
@@ -138,6 +156,17 @@ class OrderRepository {
           'discount': item.discount,
           'subtotal': item.subtotal,
         });
+
+        // Insert batch details if present
+        for (final batch in item.batches) {
+          await txn.insert('order_item_batches', {
+            'order_item_id': orderItemId,
+            'product_id': item.productId,
+            'batch_no': batch.batchNo,
+            'expired_date': batch.expiredDate.toIso8601String(),
+            'quantity': batch.quantity,
+          });
+        }
       }
 
       // Insert initial payment if provided

@@ -289,7 +289,7 @@ class CustomerRepository {
     final batch = db.batch();
 
     // Get existing phones/names to avoid duplicates is expensive for large datasets
-    // But for offline Klinik, dataset is likely small (< 10k).
+    // But for offline Otopart, dataset is likely small (< 10k).
     // Let's just do a simple check or rely on batch.
     
     // For now, allow potential duplicates via import or assume user cleaned data.

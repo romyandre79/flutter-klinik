@@ -1,3 +1,5 @@
+import 'package:kreatif_klinik/data/models/purchase_order_item_batch.dart';
+
 class PurchaseOrderItem {
   final int? id;
   final int? purchaseOrderId; // Nullable during creation
@@ -8,6 +10,7 @@ class PurchaseOrderItem {
   final int subtotal;
   final int? productId; // Link to master product
   final DateTime? createdAt;
+  final List<PurchaseOrderItemBatch> batches; // Received batches
 
   PurchaseOrderItem({
     this.id,
@@ -19,6 +22,7 @@ class PurchaseOrderItem {
     required this.subtotal,
     this.productId,
     this.createdAt,
+    this.batches = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -35,7 +39,7 @@ class PurchaseOrderItem {
     };
   }
 
-  factory PurchaseOrderItem.fromMap(Map<String, dynamic> map) {
+  factory PurchaseOrderItem.fromMap(Map<String, dynamic> map, {List<PurchaseOrderItemBatch> batches = const []}) {
     return PurchaseOrderItem(
       id: map['id'] as int?,
       purchaseOrderId: map['purchase_order_id'] as int?,
@@ -46,6 +50,7 @@ class PurchaseOrderItem {
       subtotal: map['subtotal'] as int,
       productId: map['product_id'] as int?,
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      batches: batches,
     );
   }
 
@@ -59,6 +64,7 @@ class PurchaseOrderItem {
     int? subtotal,
     int? productId,
     DateTime? createdAt,
+    List<PurchaseOrderItemBatch>? batches,
   }) {
     return PurchaseOrderItem(
       id: id ?? this.id,
@@ -70,6 +76,7 @@ class PurchaseOrderItem {
       subtotal: subtotal ?? this.subtotal,
       productId: productId ?? this.productId,
       createdAt: createdAt ?? this.createdAt,
+      batches: batches ?? this.batches,
     );
   }
 }

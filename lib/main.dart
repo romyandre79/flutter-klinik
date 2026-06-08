@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,6 +36,11 @@ import 'package:kreatif_klinik/logic/sync/sync_cubit.dart';
 import 'package:kreatif_klinik/core/api/api_service.dart';
 import 'package:kreatif_klinik/logic/cubits/customer/customer_cubit.dart';
 import 'package:kreatif_klinik/logic/cubits/supplier/supplier_cubit.dart';
+import 'package:kreatif_klinik/data/repositories/doctor_repository.dart';
+import 'package:kreatif_klinik/data/repositories/registration_repository.dart';
+import 'package:kreatif_klinik/data/repositories/examination_repository.dart';
+import 'package:kreatif_klinik/logic/cubits/doctor/doctor_cubit.dart';
+import 'package:kreatif_klinik/logic/cubits/registration/registration_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,6 +95,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => PengumumanTemplateRepository()),
         RepositoryProvider(create: (_) => StockTransferRepository()),
         RepositoryProvider(create: (_) => UnitRepository()),
+        RepositoryProvider(create: (_) => DoctorRepository()),
+        RepositoryProvider(create: (_) => RegistrationRepository()),
+        RepositoryProvider(create: (_) => ExaminationRepository()),
         RepositoryProvider(
           create: (context) => SyncService(
             apiService: ApiService(),
@@ -147,9 +155,19 @@ class MyApp extends StatelessWidget {
               supplierRepository: context.read<SupplierRepository>(),
             )..loadSuppliers(),
           ),
+          BlocProvider(
+            create: (context) => DoctorCubit(
+              context.read<DoctorRepository>(),
+            )..loadDoctors(),
+          ),
+          BlocProvider(
+            create: (context) => RegistrationCubit(
+              context.read<RegistrationRepository>(),
+            )..loadRegistrations(),
+          ),
         ],
         child: MaterialApp(
-          title: 'Klinik Offline',
+          title: 'Otopart Offline',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: AuthWrapper(showOnboarding: showOnboarding),
@@ -212,7 +230,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                       boxShadow: AppShadows.medium,
                     ),
                     child: Image.asset(
-                      'assets/icons/logoklinik.png',
+                      'assets/icons/logopos.png',
                       fit: BoxFit.contain,
                     ),
                   ),

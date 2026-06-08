@@ -6,6 +6,11 @@ class StoreInfo {
   final String phone;
   final String invoicePrefix;
   final String fonnteToken;
+  final String deviceId;
+  final String branchId;
+  final String branchCode;
+  final String customerName;
+  final String customerWa;
 
   const StoreInfo({
     required this.name,
@@ -13,6 +18,11 @@ class StoreInfo {
     required this.phone,
     required this.invoicePrefix,
     required this.fonnteToken,
+    this.deviceId = '',
+    this.branchId = '',
+    this.branchCode = '',
+    this.customerName = '',
+    this.customerWa = '',
   });
 
   StoreInfo copyWith({
@@ -21,6 +31,11 @@ class StoreInfo {
     String? phone,
     String? invoicePrefix,
     String? fonnteToken,
+    String? deviceId,
+    String? branchId,
+    String? branchCode,
+    String? customerName,
+    String? customerWa,
   }) {
     return StoreInfo(
       name: name ?? this.name,
@@ -28,6 +43,11 @@ class StoreInfo {
       phone: phone ?? this.phone,
       invoicePrefix: invoicePrefix ?? this.invoicePrefix,
       fonnteToken: fonnteToken ?? this.fonnteToken,
+      deviceId: deviceId ?? this.deviceId,
+      branchId: branchId ?? this.branchId,
+      branchCode: branchCode ?? this.branchCode,
+      customerName: customerName ?? this.customerName,
+      customerWa: customerWa ?? this.customerWa,
     );
   }
 }

@@ -8,6 +8,15 @@ if [ -z "$PLATFORM" ]; then
     exit 1
 fi
 
+echo "=========================================="
+echo "Running Build Configurator..."
+echo "=========================================="
+dart run scripts/configure_build.dart
+if [ $? -ne 0 ]; then
+    echo "Configuration failed!"
+    exit 1
+fi
+
 echo ""
 echo "=========================================="
 echo "[1/4] Cleaning Project..."
@@ -60,6 +69,12 @@ case $PLATFORM in
         exit 1
         ;;
 esac
+
+echo ""
+echo "=========================================="
+echo "Copying Build Outputs..."
+echo "=========================================="
+dart run scripts/configure_build.dart --copy $PLATFORM
 
 echo ""
 echo "=========================================="

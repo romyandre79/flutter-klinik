@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:kreatif_klinik/data/models/product.dart';
 import 'package:kreatif_klinik/data/models/product_unit.dart';
+import 'package:kreatif_klinik/data/models/order_item_batch.dart';
 
 class CartItem extends Equatable {
   final Product product;
@@ -8,6 +9,7 @@ class CartItem extends Equatable {
   final int discount;
   final String? note;
   final ProductUnit? selectedUnit;
+  final List<OrderItemBatch> batches; // Selected batches for sale
 
   const CartItem({
     required this.product,
@@ -15,6 +17,7 @@ class CartItem extends Equatable {
     this.discount = 0,
     this.note,
     this.selectedUnit,
+    this.batches = const [],
   });
 
   int get effectivePrice => selectedUnit?.price ?? product.price;
@@ -29,6 +32,7 @@ class CartItem extends Equatable {
     int? discount,
     String? note,
     ProductUnit? selectedUnit,
+    List<OrderItemBatch>? batches,
   }) {
     return CartItem(
       product: product ?? this.product,
@@ -36,9 +40,10 @@ class CartItem extends Equatable {
       discount: discount ?? this.discount,
       note: note ?? this.note,
       selectedUnit: selectedUnit ?? this.selectedUnit,
+      batches: batches ?? this.batches,
     );
   }
 
   @override
-  List<Object?> get props => [product, quantity, discount, note, selectedUnit];
+  List<Object?> get props => [product, quantity, discount, note, selectedUnit, batches];
 }

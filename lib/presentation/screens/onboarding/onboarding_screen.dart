@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kreatif_klinik/core/theme/app_theme.dart';
 
@@ -404,7 +404,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ],
       ),
       child: Image.asset(
-        'assets/icons/logoklinik.png',
+        'assets/icons/logopos.png',
         fit: BoxFit.contain,
       ),
     );

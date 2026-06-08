@@ -1,4 +1,4 @@
-package com.kreatifmajumu.klinikoffline
+package com.kreatifmajumu.posoffline
 
 import io.flutter.embedding.android.FlutterActivity
 

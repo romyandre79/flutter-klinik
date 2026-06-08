@@ -379,4 +379,37 @@ class ProductRepository {
 
     await batch.commit(noResult: true);
   }
+
+  // Get available batches for a product (received minus sold)
+  Future<List<Map<String, dynamic>>> getAvailableBatches(int productId) async {
+    final db = await _databaseHelper.database;
+    
+    final result = await db.rawQuery('''
+      SELECT 
+        b.batch_no, 
+        b.expired_date, 
+        SUM(b.quantity) as received_qty,
+        COALESCE(
+          (SELECT SUM(oib.quantity) 
+           FROM order_item_batches oib 
+           WHERE oib.product_id = b.product_id 
+             AND oib.batch_no = b.batch_no 
+             AND oib.expired_date = b.expired_date), 0
+        ) as sold_qty
+      FROM purchase_order_item_batches b
+      WHERE b.product_id = ?
+      GROUP BY b.batch_no, b.expired_date
+      HAVING (SUM(b.quantity) - sold_qty) > 0
+    ''', [productId]);
+    
+    return result.map((row) {
+      final received = (row['received_qty'] as num).toDouble();
+      final sold = (row['sold_qty'] as num).toDouble();
+      return {
+        'batch_no': row['batch_no'] as String,
+        'expired_date': row['expired_date'] as String,
+        'available_qty': received - sold,
+      };
+    }).toList();
+  }
 }

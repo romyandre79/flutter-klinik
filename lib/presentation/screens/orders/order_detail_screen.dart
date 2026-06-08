@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_klinik/core/theme/app_theme.dart';
@@ -1027,6 +1027,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             color: AppThemeColors.textSecondary,
                           ),
                         ),
+                      if (order.nomorPolisi != null)
+                        Row(
+                          children: [
+                            const Icon(Icons.directions_car_outlined, size: 12, color: AppThemeColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              order.nomorPolisi!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppThemeColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -1146,6 +1160,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   ],
                                 ],
                               ),
+                              if (item.batches.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: item.batches.map((batch) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: Colors.grey.shade200),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.qr_code, size: 10, color: Colors.grey),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${batch.batchNo} (${batch.quantity.toStringAsFixed(0)} ${item.unit})',
+                                            style: AppTypography.labelSmall.copyWith(
+                                              fontSize: 10,
+                                              color: Colors.grey.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ],
                           ),
                         ),

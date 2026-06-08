@@ -14,9 +14,13 @@
       "Bash(flutter analyze *)",
       "Bash(Get-ChildItem \"C:\\\\lara\\\\www\\\\kreatif\\\\kreatif-klinik\\\\windows\\\\flutter\\\\ephemeral\\\\.plugin_symlinks\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object Name)",
-      "Bash(xargs sed -i 's/package:kreatif_klinik\\\\//package:kreatif_pos\\\\//g')",
-      "Bash(xargs sed -i 's/package:kreatif_pos\\\\//package:kreatif_klinik\\\\//g')",
-      "Bash(flutter pub *)"
+      "Bash(xargs sed -i 's/package:kreatif_klinik\\\\//package:kreatif_klinik\\\\//g')",
+      "Bash(xargs sed -i 's/package:kreatif_klinik\\\\//package:kreatif_klinik\\\\//g')",
+      "Bash(flutter pub *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\lara\\\\www\\\\kreatif\\\\kreatif-klinik\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(Remove-Item *)",
+      "Bash(flutter clean *)"
     ]
   }
 }

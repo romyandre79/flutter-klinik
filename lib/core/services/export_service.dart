@@ -1,5 +1,6 @@
 ﻿import 'dart:io';
 import 'package:excel/excel.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart' show SharePlus, ShareParams, XFile;
@@ -20,6 +21,7 @@ class ExportService {
   Future<String> exportOrdersToExcel(
     List<Order> orders,
     ReportData reportData,
+    List<PurchaseOrder> purchases,
   ) async {
     final excel = Excel.createExcel();
 
@@ -29,8 +31,11 @@ class ExportService {
     // Sheet 2: Orders
     _createOrdersSheet(excel, orders);
 
-    // Sheet 3: Service Summary
-    _createServiceSummarySheet(excel, reportData);
+    // Sheet 3: Purchases
+    _createPurchasesSheet(excel, purchases);
+
+    // Sheet 4: Popular Products & Services
+    _createPopularItemsSheet(excel, reportData);
 
     // Remove default sheet
     excel.delete('Sheet1');
@@ -39,7 +44,7 @@ class ExportService {
     final directory = await getApplicationDocumentsDirectory();
     final fileName =
         'Laporan_${DateFormatter.formatDateCompact(reportData.startDate)}_${DateFormatter.formatDateCompact(reportData.endDate)}.xlsx';
-    final filePath = '${directory.path}/$fileName';
+    final filePath = '${directory.path}${Platform.pathSeparator}$fileName';
 
     final fileBytes = excel.save();
     if (fileBytes != null) {
@@ -151,27 +156,129 @@ class ExportService {
     }
   }
 
-  void _createServiceSummarySheet(Excel excel, ReportData reportData) {
-    final sheet = excel['Layanan Populer'];
+  void _createPurchasesSheet(Excel excel, List<PurchaseOrder> purchases) {
+    final sheet = excel['Daftar Pembelian'];
 
-    // Headers
-    sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('Nama Layanan');
+    sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('Supplier');
+    sheet.cell(CellIndex.indexByString('B1')).value = TextCellValue('Tanggal');
+    sheet.cell(CellIndex.indexByString('C1')).value = TextCellValue('Status');
+    sheet.cell(CellIndex.indexByString('D1')).value = TextCellValue('Item');
+    sheet.cell(CellIndex.indexByString('E1')).value = TextCellValue('Qty');
+    sheet.cell(CellIndex.indexByString('F1')).value = TextCellValue('Satuan');
+    sheet.cell(CellIndex.indexByString('G1')).value = TextCellValue('Harga Satuan');
+    sheet.cell(CellIndex.indexByString('H1')).value = TextCellValue('Subtotal');
+    sheet.cell(CellIndex.indexByString('I1')).value = TextCellValue('Total Transaksi');
+    sheet.cell(CellIndex.indexByString('J1')).value = TextCellValue('No Batch');
+    sheet.cell(CellIndex.indexByString('K1')).value = TextCellValue('Expire Date');
+
+    int row = 2;
+    for (final purchase in purchases) {
+      final supplierName = purchase.supplier?.name ?? 'Unknown Supplier';
+
+      if (purchase.items.isEmpty) {
+        sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
+        sheet.cell(CellIndex.indexByString('B$row')).value =
+            TextCellValue(DateFormatter.formatDate(purchase.orderDate));
+        sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
+        sheet.cell(CellIndex.indexByString('I$row')).value =
+            TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+        row++;
+      } else {
+        bool firstItem = true;
+        for (final item in purchase.items) {
+          if (item.batches.isEmpty) {
+            sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
+            sheet.cell(CellIndex.indexByString('B$row')).value =
+                TextCellValue(DateFormatter.formatDate(purchase.orderDate));
+            sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
+            sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(item.itemName);
+            sheet.cell(CellIndex.indexByString('E$row')).value = IntCellValue(item.quantity);
+            sheet.cell(CellIndex.indexByString('F$row')).value = TextCellValue(item.unit);
+            sheet.cell(CellIndex.indexByString('G$row')).value =
+                TextCellValue(CurrencyFormatter.format(item.cost));
+            sheet.cell(CellIndex.indexByString('H$row')).value =
+                TextCellValue(CurrencyFormatter.format(item.subtotal));
+            if (firstItem) {
+              sheet.cell(CellIndex.indexByString('I$row')).value =
+                  TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+              firstItem = false;
+            }
+            row++;
+          } else {
+            bool firstBatch = true;
+            for (final batch in item.batches) {
+              sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(supplierName);
+              sheet.cell(CellIndex.indexByString('B$row')).value =
+                  TextCellValue(DateFormatter.formatDate(purchase.orderDate));
+              sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
+              sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(item.itemName);
+              sheet.cell(CellIndex.indexByString('F$row')).value = TextCellValue(item.unit);
+              sheet.cell(CellIndex.indexByString('G$row')).value =
+                  TextCellValue(CurrencyFormatter.format(item.cost));
+              if (firstBatch) {
+                sheet.cell(CellIndex.indexByString('E$row')).value = IntCellValue(item.quantity);
+                sheet.cell(CellIndex.indexByString('H$row')).value =
+                    TextCellValue(CurrencyFormatter.format(item.subtotal));
+                if (firstItem) {
+                  sheet.cell(CellIndex.indexByString('I$row')).value =
+                      TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+                  firstItem = false;
+                }
+                firstBatch = false;
+              }
+              sheet.cell(CellIndex.indexByString('J$row')).value = TextCellValue(batch.batchNo);
+              sheet.cell(CellIndex.indexByString('K$row')).value =
+                  TextCellValue(DateFormatter.formatDate(batch.expiredDate));
+              row++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  void _createPopularItemsSheet(Excel excel, ReportData reportData) {
+    final sheet = excel['Produk & Jasa Populer'];
+
+    sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('Nama Produk/Jasa');
     sheet.cell(CellIndex.indexByString('B1')).value = TextCellValue('Jumlah Penjualan');
     sheet.cell(CellIndex.indexByString('C1')).value = TextCellValue('Total Qty');
     sheet.cell(CellIndex.indexByString('D1')).value = TextCellValue('Total Pendapatan');
 
     int row = 2;
-    for (final service in reportData.topServices) {
-      sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(service.serviceName);
-      sheet.cell(CellIndex.indexByString('B$row')).value = IntCellValue(service.orderCount);
-      sheet.cell(CellIndex.indexByString('C$row')).value = IntCellValue(service.totalQuantity);
+    for (final item in reportData.topServices) {
+      sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(item.serviceName);
+      sheet.cell(CellIndex.indexByString('B$row')).value = IntCellValue(item.orderCount);
+      sheet.cell(CellIndex.indexByString('C$row')).value = IntCellValue(item.totalQuantity);
       sheet.cell(CellIndex.indexByString('D$row')).value =
-          TextCellValue(CurrencyFormatter.format(service.totalRevenue));
+          TextCellValue(CurrencyFormatter.format(item.totalRevenue));
       row++;
     }
   }
 
-  /// Share exported file
+  /// Download file: Save As dialog on desktop, share sheet on mobile/web
+  Future<void> downloadFile(String sourcePath) async {
+    final suggestedName = sourcePath.split(RegExp(r'[/\\]')).last;
+
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      final savePath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Simpan Laporan',
+        fileName: suggestedName,
+        allowedExtensions: ['xlsx'],
+        type: FileType.custom,
+      );
+      if (savePath != null) {
+        final bytes = await File(sourcePath).readAsBytes();
+        await File(savePath).writeAsBytes(bytes, flush: true);
+      }
+    } else {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(sourcePath)], text: 'Laporan Transaksi'),
+      );
+    }
+  }
+
+  /// Share exported file (for sending via WA / other apps)
   Future<void> shareFile(String filePath) async {
     await SharePlus.instance.share(
       ShareParams(files: [XFile(filePath)], text: 'Laporan Transaksi'),
@@ -243,7 +350,7 @@ class ExportService {
     final directory = await getApplicationDocumentsDirectory();
     final fileName =
         'Laporan_Penjualan_Detail_${DateFormatter.formatDateCompact(reportData.startDate)}_${DateFormatter.formatDateCompact(reportData.endDate)}.xlsx';
-    final filePath = '${directory.path}/$fileName';
+    final filePath = '${directory.path}${Platform.pathSeparator}$fileName';
 
     final fileBytes = excel.save();
     if (fileBytes != null) {
@@ -350,7 +457,7 @@ class ExportService {
     final directory = await getApplicationDocumentsDirectory();
     final fileName =
         'Laporan_Pembelian_Detail_${DateFormatter.formatDateCompact(reportData.startDate)}_${DateFormatter.formatDateCompact(reportData.endDate)}.xlsx';
-    final filePath = '${directory.path}/$fileName';
+    final filePath = '${directory.path}${Platform.pathSeparator}$fileName';
 
     final fileBytes = excel.save();
     if (fileBytes != null) {
@@ -365,30 +472,30 @@ class ExportService {
   /// Export Stock Report to Excel
   Future<String> exportStockReportToExcel(
     List<Product> products,
+    Map<int, List<Map<String, dynamic>>> stockBatches,
   ) async {
     final excel = Excel.createExcel();
 
-    // Sheet 1: Stock Report
     final sheet = excel['Stok Produk'];
 
     // Headers
     sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('Nama Produk');
     sheet.cell(CellIndex.indexByString('B1')).value = TextCellValue('Kategori');
-    sheet.cell(CellIndex.indexByString('C1')).value = TextCellValue('Stok');
+    sheet.cell(CellIndex.indexByString('C1')).value = TextCellValue('Stok Total');
     sheet.cell(CellIndex.indexByString('D1')).value = TextCellValue('Satuan');
     sheet.cell(CellIndex.indexByString('E1')).value = TextCellValue('Harga Modal');
     sheet.cell(CellIndex.indexByString('F1')).value = TextCellValue('Harga Jual');
     sheet.cell(CellIndex.indexByString('G1')).value = TextCellValue('Nilai Aset (Modal)');
     sheet.cell(CellIndex.indexByString('H1')).value = TextCellValue('Nilai Jual');
+    sheet.cell(CellIndex.indexByString('I1')).value = TextCellValue('No Batch');
+    sheet.cell(CellIndex.indexByString('J1')).value = TextCellValue('Expire Date');
+    sheet.cell(CellIndex.indexByString('K1')).value = TextCellValue('Sisa Batch');
 
     int row = 2;
     int totalAssetValue = 0;
     int totalSalesValue = 0;
 
     for (final product in products) {
-      // Only include goods or products with stock tracking?
-      // Usually user wants to see all products, but stock only relevant for goods.
-      
       final stock = product.stock ?? 0;
       final assetValue = (stock * product.cost).round();
       final salesValue = (stock * product.price).round();
@@ -396,25 +503,47 @@ class ExportService {
       totalAssetValue += assetValue;
       totalSalesValue += salesValue;
 
+      final batches = stockBatches[product.id] ?? [];
+
+      // Product row
       sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(product.name);
       sheet.cell(CellIndex.indexByString('B$row')).value = TextCellValue(product.type.displayName);
       sheet.cell(CellIndex.indexByString('C$row')).value = DoubleCellValue(stock);
       sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(product.unit);
-      
       sheet.cell(CellIndex.indexByString('E$row')).value =
           TextCellValue(CurrencyFormatter.format(product.cost));
       sheet.cell(CellIndex.indexByString('F$row')).value =
           TextCellValue(CurrencyFormatter.format(product.price));
-      
       sheet.cell(CellIndex.indexByString('G$row')).value =
           TextCellValue(CurrencyFormatter.format(assetValue));
       sheet.cell(CellIndex.indexByString('H$row')).value =
           TextCellValue(CurrencyFormatter.format(salesValue));
-      
-      row++;
+
+      if (batches.isNotEmpty) {
+        // First batch on same row as product
+        sheet.cell(CellIndex.indexByString('I$row')).value =
+            TextCellValue(batches[0]['batchNo'] as String);
+        sheet.cell(CellIndex.indexByString('J$row')).value =
+            TextCellValue(DateFormatter.formatDate(batches[0]['expiredDate'] as DateTime));
+        sheet.cell(CellIndex.indexByString('K$row')).value =
+            DoubleCellValue((batches[0]['remainingQty'] as double));
+        row++;
+        // Remaining batches as sub-rows
+        for (int i = 1; i < batches.length; i++) {
+          sheet.cell(CellIndex.indexByString('I$row')).value =
+              TextCellValue(batches[i]['batchNo'] as String);
+          sheet.cell(CellIndex.indexByString('J$row')).value =
+              TextCellValue(DateFormatter.formatDate(batches[i]['expiredDate'] as DateTime));
+          sheet.cell(CellIndex.indexByString('K$row')).value =
+              DoubleCellValue((batches[i]['remainingQty'] as double));
+          row++;
+        }
+      } else {
+        row++;
+      }
     }
 
-    // Add totals row
+    // Totals row
     row++;
     sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue('TOTAL');
     sheet.cell(CellIndex.indexByString('G$row')).value =
@@ -429,7 +558,7 @@ class ExportService {
     final directory = await getApplicationDocumentsDirectory();
     final fileName =
         'Laporan_Stok_${DateFormatter.formatDateCompact(DateTime.now())}.xlsx';
-    final filePath = '${directory.path}/$fileName';
+    final filePath = '${directory.path}${Platform.pathSeparator}$fileName';
 
     final fileBytes = excel.save();
     if (fileBytes != null) {
@@ -469,7 +598,7 @@ class ExportService {
     } else {
       // Mobile
       final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$fileName';
+      final filePath = '${directory.path}${Platform.pathSeparator}$fileName';
       final file = File(filePath);
       await file.writeAsBytes(fileBytes);
       return filePath;

@@ -404,7 +404,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ],
       ),
       child: Image.asset(
-        'assets/icons/logopos.png',
+        'assets/icons/logoklinik.png',
         fit: BoxFit.contain,
       ),
     );

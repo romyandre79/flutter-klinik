@@ -37,20 +37,24 @@ class ReportCubit extends Cubit<ReportState> {
     emit(const ReportExporting());
 
     try {
+      final purchases = await _reportRepository.getPurchasesWithItemsByDateRange(
+        currentState.data.startDate,
+        currentState.data.endDate,
+      );
+
       final filePath = await _exportService.exportOrdersToExcel(
         currentState.orders,
         currentState.data,
+        purchases,
       );
 
-      // Share the file
-      await _exportService.shareFile(filePath);
+      await _exportService.downloadFile(filePath);
 
       emit(ReportExported(
         filePath: filePath,
         message: 'Laporan berhasil di-export',
       ));
 
-      // Restore previous state
       emit(currentState);
     } catch (e) {
       emit(ReportError(e.toString().replaceAll('Exception: ', '')));
@@ -75,7 +79,7 @@ class ReportCubit extends Cubit<ReportState> {
         currentState.data,
       );
 
-      await _exportService.shareFile(filePath);
+      await _exportService.downloadFile(filePath);
 
       emit(ReportExported(
         filePath: filePath,
@@ -107,7 +111,7 @@ class ReportCubit extends Cubit<ReportState> {
         currentState.data,
       );
 
-      await _exportService.shareFile(filePath);
+      await _exportService.downloadFile(filePath);
 
       emit(ReportExported(
         filePath: filePath,
@@ -124,17 +128,24 @@ class ReportCubit extends Cubit<ReportState> {
   /// Export Stock Report
   Future<void> exportStockReport() async {
     final currentState = state;
-    // Stock report doesn't necessarily depend on report date range, 
-    // but we usually export it from report screen which is loaded.
-    
+
     emit(const ReportExporting());
 
     try {
-      final products = await _reportRepository.getAllProducts();
+      final results = await Future.wait([
+        _reportRepository.getAllProducts(),
+        _reportRepository.getStockBatches(),
+      ]);
 
-      final filePath = await _exportService.exportStockReportToExcel(products);
+      final products = results[0] as List<dynamic>;
+      final batches = results[1] as Map<dynamic, dynamic>;
 
-      await _exportService.shareFile(filePath);
+      final filePath = await _exportService.exportStockReportToExcel(
+        products.cast(),
+        batches.cast(),
+      );
+
+      await _exportService.downloadFile(filePath);
 
       emit(ReportExported(
         filePath: filePath,
@@ -144,17 +155,20 @@ class ReportCubit extends Cubit<ReportState> {
       if (currentState is ReportLoaded) {
         emit(currentState);
       } else {
-        // If somehow we allow export without loaded report, go back to initial or whatever
-        // But practically we are in ReportLoaded usually.
-        // If we were in initial, we might want to stay there or go to loaded if we had data.
-        // For safety, let's just reload or keep currentState if it was not exporting.
-        // Since we emitted Exporting, we lost previous state if we didn't save it.
-        // We saved it in currentState.
-        emit(currentState); 
+        emit(currentState);
       }
     } catch (e) {
       emit(ReportError(e.toString().replaceAll('Exception: ', '')));
       emit(currentState);
+    }
+  }
+
+  /// Share an already-exported file (e.g. send to WA after download)
+  Future<void> shareExportedFile(String filePath) async {
+    try {
+      await _exportService.shareFile(filePath);
+    } catch (e) {
+      emit(ReportError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 }

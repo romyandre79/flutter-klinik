@@ -1,4 +1,4 @@
-package com.kreatifmajumu.kreatif_pos
+package com.kreatifmajumu.kreatif_klinik
 
 import io.flutter.embedding.android.FlutterActivity
 

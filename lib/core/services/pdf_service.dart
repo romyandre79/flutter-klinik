@@ -24,7 +24,7 @@ class PdfService {
     final storePhone = settings[AppConstants.keyStorePhone] ?? AppConstants.defaultStorePhone;
 
     // Load logo if available (optional, for now use text)
-    // final logo = await rootBundle.load('assets/icons/logopos.png');
+    // final logo = await rootBundle.load('assets/icons/logoklinik.png');
     // final image = pw.MemoryImage(logo.buffer.asUint8List());
 
     pdf.addPage(

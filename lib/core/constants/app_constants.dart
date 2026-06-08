@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   // App Info
-  static const String appName = 'Kreatif - POS Offline';
+  static const String appName = 'Kreatif - Klinik Offline';
   static const String appVersion = '1.0.0';
   static const String appDescription = 'Aplikasi Kasir Otopart Offline - Full Offline, Jalan Tanpa Internet!';
 

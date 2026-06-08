@@ -342,4 +342,39 @@ class ReportRepository {
     final maps = await db.query('products', orderBy: 'name ASC');
     return maps.map((m) => Product.fromMap(m)).toList();
   }
+
+  /// Get remaining stock per batch per product.
+  /// Returns Map<productId, List<{batchNo, expiredDate, remainingQty}>>
+  Future<Map<int, List<Map<String, dynamic>>>> getStockBatches() async {
+    final db = await _databaseHelper.database;
+
+    final rows = await db.rawQuery('''
+      SELECT
+        b.product_id,
+        b.batch_no,
+        b.expired_date,
+        SUM(b.quantity) - COALESCE(
+          (SELECT SUM(ob.quantity)
+           FROM order_item_batches ob
+           WHERE ob.product_id = b.product_id
+             AND ob.batch_no = b.batch_no),
+          0
+        ) AS remaining_qty
+      FROM purchase_order_item_batches b
+      GROUP BY b.product_id, b.batch_no, b.expired_date
+      HAVING remaining_qty > 0
+      ORDER BY b.product_id, b.expired_date ASC
+    ''');
+
+    final result = <int, List<Map<String, dynamic>>>{};
+    for (final row in rows) {
+      final productId = row['product_id'] as int;
+      result.putIfAbsent(productId, () => []).add({
+        'batchNo': row['batch_no'] as String,
+        'expiredDate': DateTime.parse(row['expired_date'] as String),
+        'remainingQty': (row['remaining_qty'] as num).toDouble(),
+      });
+    }
+    return result;
+  }
 }

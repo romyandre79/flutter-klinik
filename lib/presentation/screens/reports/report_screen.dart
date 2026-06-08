@@ -107,10 +107,19 @@ class _ReportScreenState extends State<ReportScreen> {
               child: BlocConsumer<ReportCubit, ReportState>(
                   listener: (context, state) {
                     if (state is ReportExported) {
+                      final exportedFilePath = state.filePath;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(state.message),
                           backgroundColor: AppThemeColors.success,
+                          duration: const Duration(seconds: 6),
+                          action: SnackBarAction(
+                            label: 'Kirim ke WA',
+                            textColor: Colors.white,
+                            onPressed: () {
+                              context.read<ReportCubit>().shareExportedFile(exportedFilePath);
+                            },
+                          ),
                         ),
                       );
                     } else if (state is ReportError) {

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
@@ -170,6 +170,9 @@ class ExportService {
     sheet.cell(CellIndex.indexByString('I1')).value = TextCellValue('Total Transaksi');
     sheet.cell(CellIndex.indexByString('J1')).value = TextCellValue('No Batch');
     sheet.cell(CellIndex.indexByString('K1')).value = TextCellValue('Expire Date');
+    sheet.cell(CellIndex.indexByString('L1')).value = TextCellValue('No Faktur');
+    sheet.cell(CellIndex.indexByString('M1')).value = TextCellValue('Tgl Faktur');
+    sheet.cell(CellIndex.indexByString('N1')).value = TextCellValue('Keterangan');
 
     int row = 2;
     for (final purchase in purchases) {
@@ -182,6 +185,12 @@ class ExportService {
         sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
         sheet.cell(CellIndex.indexByString('I$row')).value =
             TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+        sheet.cell(CellIndex.indexByString('L$row')).value = TextCellValue(purchase.noFaktur ?? '-');
+        sheet.cell(CellIndex.indexByString('M$row')).value = TextCellValue(
+            purchase.tglFaktur != null && DateTime.tryParse(purchase.tglFaktur!) != null
+                ? DateFormatter.formatDate(DateTime.parse(purchase.tglFaktur!))
+                : '-');
+        sheet.cell(CellIndex.indexByString('N$row')).value = TextCellValue(purchase.keterangan ?? '-');
         row++;
       } else {
         bool firstItem = true;
@@ -203,6 +212,12 @@ class ExportService {
                   TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
               firstItem = false;
             }
+            sheet.cell(CellIndex.indexByString('L$row')).value = TextCellValue(purchase.noFaktur ?? '-');
+            sheet.cell(CellIndex.indexByString('M$row')).value = TextCellValue(
+                purchase.tglFaktur != null && DateTime.tryParse(purchase.tglFaktur!) != null
+                    ? DateFormatter.formatDate(DateTime.parse(purchase.tglFaktur!))
+                    : '-');
+            sheet.cell(CellIndex.indexByString('N$row')).value = TextCellValue(purchase.keterangan ?? '-');
             row++;
           } else {
             bool firstBatch = true;
@@ -229,6 +244,12 @@ class ExportService {
               sheet.cell(CellIndex.indexByString('J$row')).value = TextCellValue(batch.batchNo);
               sheet.cell(CellIndex.indexByString('K$row')).value =
                   TextCellValue(DateFormatter.formatDate(batch.expiredDate));
+              sheet.cell(CellIndex.indexByString('L$row')).value = TextCellValue(purchase.noFaktur ?? '-');
+              sheet.cell(CellIndex.indexByString('M$row')).value = TextCellValue(
+                  purchase.tglFaktur != null && DateTime.tryParse(purchase.tglFaktur!) != null
+                      ? DateFormatter.formatDate(DateTime.parse(purchase.tglFaktur!))
+                      : '-');
+              sheet.cell(CellIndex.indexByString('N$row')).value = TextCellValue(purchase.keterangan ?? '-');
               row++;
             }
           }
@@ -269,7 +290,9 @@ class ExportService {
       );
       if (savePath != null) {
         final bytes = await File(sourcePath).readAsBytes();
-        await File(savePath).writeAsBytes(bytes, flush: true);
+        final saveFile = File(savePath);
+        await saveFile.parent.create(recursive: true);
+        await saveFile.writeAsBytes(bytes, flush: true);
       }
     } else {
       await SharePlus.instance.share(
@@ -384,6 +407,9 @@ class ExportService {
     sheet.cell(CellIndex.indexByString('I1')).value = TextCellValue('Total Transaksi');
     sheet.cell(CellIndex.indexByString('J1')).value = TextCellValue('No Batch');
     sheet.cell(CellIndex.indexByString('K1')).value = TextCellValue('Expire Date');
+    sheet.cell(CellIndex.indexByString('L1')).value = TextCellValue('No Faktur');
+    sheet.cell(CellIndex.indexByString('M1')).value = TextCellValue('Tgl Faktur');
+    sheet.cell(CellIndex.indexByString('N1')).value = TextCellValue('Keterangan');
 
     int row = 2;
     for (final purchase in purchases) {
@@ -396,6 +422,12 @@ class ExportService {
         sheet.cell(CellIndex.indexByString('C$row')).value = TextCellValue(purchase.statusDisplay);
         sheet.cell(CellIndex.indexByString('I$row')).value =
             TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
+        sheet.cell(CellIndex.indexByString('L$row')).value = TextCellValue(purchase.noFaktur ?? '-');
+        sheet.cell(CellIndex.indexByString('M$row')).value = TextCellValue(
+            purchase.tglFaktur != null && DateTime.tryParse(purchase.tglFaktur!) != null
+                ? DateFormatter.formatDate(DateTime.parse(purchase.tglFaktur!))
+                : '-');
+        sheet.cell(CellIndex.indexByString('N$row')).value = TextCellValue(purchase.keterangan ?? '-');
         row++;
       } else {
         bool firstItem = true;
@@ -417,6 +449,12 @@ class ExportService {
                   TextCellValue(CurrencyFormatter.format(purchase.totalAmount));
               firstItem = false;
             }
+            sheet.cell(CellIndex.indexByString('L$row')).value = TextCellValue(purchase.noFaktur ?? '-');
+            sheet.cell(CellIndex.indexByString('M$row')).value = TextCellValue(
+                purchase.tglFaktur != null && DateTime.tryParse(purchase.tglFaktur!) != null
+                    ? DateFormatter.formatDate(DateTime.parse(purchase.tglFaktur!))
+                    : '-');
+            sheet.cell(CellIndex.indexByString('N$row')).value = TextCellValue(purchase.keterangan ?? '-');
             row++;
           } else {
             bool firstBatch = true;
@@ -443,6 +481,12 @@ class ExportService {
               sheet.cell(CellIndex.indexByString('J$row')).value = TextCellValue(batch.batchNo);
               sheet.cell(CellIndex.indexByString('K$row')).value =
                   TextCellValue(DateFormatter.formatDate(batch.expiredDate));
+              sheet.cell(CellIndex.indexByString('L$row')).value = TextCellValue(purchase.noFaktur ?? '-');
+              sheet.cell(CellIndex.indexByString('M$row')).value = TextCellValue(
+                  purchase.tglFaktur != null && DateTime.tryParse(purchase.tglFaktur!) != null
+                      ? DateFormatter.formatDate(DateTime.parse(purchase.tglFaktur!))
+                      : '-');
+              sheet.cell(CellIndex.indexByString('N$row')).value = TextCellValue(purchase.keterangan ?? '-');
               row++;
             }
           }
@@ -570,6 +614,111 @@ class ExportService {
     throw Exception('Gagal membuat file Excel Laporan Stok');
   }
 
+  /// Export Expired / Expiring Products to Excel
+  Future<String> exportExpiredReportToExcel(
+    List<Product> products,
+    Map<int, List<Map<String, dynamic>>> stockBatches, {
+    required bool isSevenDays,
+  }) async {
+    final excel = Excel.createExcel();
+
+    final title = isSevenDays ? 'Expired-7Hari' : 'Expired';
+    final sheet = excel[title];
+
+    // Headers
+    sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('Nama Produk');
+    sheet.cell(CellIndex.indexByString('B1')).value = TextCellValue('Kategori');
+    sheet.cell(CellIndex.indexByString('C1')).value = TextCellValue('Stok Total');
+    sheet.cell(CellIndex.indexByString('D1')).value = TextCellValue('Satuan');
+    sheet.cell(CellIndex.indexByString('E1')).value = TextCellValue('Harga Modal');
+    sheet.cell(CellIndex.indexByString('F1')).value = TextCellValue('Harga Jual');
+    sheet.cell(CellIndex.indexByString('G1')).value = TextCellValue('No Batch');
+    sheet.cell(CellIndex.indexByString('H1')).value = TextCellValue('Expire Date');
+    sheet.cell(CellIndex.indexByString('I1')).value = TextCellValue('Sisa Batch');
+    sheet.cell(CellIndex.indexByString('J1')).value = TextCellValue('Status');
+
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    final limitDate = isSevenDays ? todayMidnight.add(const Duration(days: 7)) : todayMidnight;
+
+    int row = 2;
+
+    for (final product in products) {
+      final batches = stockBatches[product.id] ?? [];
+      
+      // Filter batches based on expired date
+      final filteredBatches = batches.where((b) {
+        final expDate = b['expiredDate'] as DateTime;
+        if (isSevenDays) {
+          // expired-7hari should show items that are expired or will expire in <= 7 days
+          return expDate.isBefore(limitDate) || expDate.isAtSameMomentAs(limitDate);
+        } else {
+          // expired should show items that are expired already
+          return expDate.isBefore(todayMidnight) || expDate.isAtSameMomentAs(todayMidnight);
+        }
+      }).toList();
+
+      if (filteredBatches.isEmpty) continue;
+
+      final stock = product.stock ?? 0;
+
+      // Product basic data on first row
+      sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(product.name);
+      sheet.cell(CellIndex.indexByString('B$row')).value = TextCellValue(product.type.displayName);
+      sheet.cell(CellIndex.indexByString('C$row')).value = DoubleCellValue(stock);
+      sheet.cell(CellIndex.indexByString('D$row')).value = TextCellValue(product.unit);
+      sheet.cell(CellIndex.indexByString('E$row')).value =
+          TextCellValue(CurrencyFormatter.format(product.cost));
+      sheet.cell(CellIndex.indexByString('F$row')).value =
+          TextCellValue(CurrencyFormatter.format(product.price));
+
+      for (int i = 0; i < filteredBatches.length; i++) {
+        final batch = filteredBatches[i];
+        final expDate = batch['expiredDate'] as DateTime;
+        
+        final targetRow = row;
+        
+        sheet.cell(CellIndex.indexByString('G$targetRow')).value =
+            TextCellValue(batch['batchNo'] as String);
+        sheet.cell(CellIndex.indexByString('H$targetRow')).value =
+            TextCellValue(DateFormatter.formatDate(expDate));
+        sheet.cell(CellIndex.indexByString('I$targetRow')).value =
+            DoubleCellValue((batch['remainingQty'] as num).toDouble());
+
+        // Status: Expired vs Expiring in X days
+        String status;
+        if (expDate.isBefore(todayMidnight)) {
+          status = 'Expired';
+        } else {
+          final diff = expDate.difference(todayMidnight).inDays;
+          status = 'Expired dalam $diff Hari';
+        }
+        sheet.cell(CellIndex.indexByString('J$targetRow')).value = TextCellValue(status);
+
+        row++;
+      }
+    }
+
+    // Remove default sheet
+    excel.delete('Sheet1');
+
+    // Save file
+    final directory = await getApplicationDocumentsDirectory();
+    final filePrefix = isSevenDays ? 'Laporan_Expired_7Hari' : 'Laporan_Expired';
+    final fileName =
+        '${filePrefix}_${DateFormatter.formatDateCompact(DateTime.now())}.xlsx';
+    final filePath = '${directory.path}${Platform.pathSeparator}$fileName';
+
+    final fileBytes = excel.save();
+    if (fileBytes != null) {
+      final file = File(filePath);
+      await file.writeAsBytes(fileBytes);
+      return filePath;
+    }
+
+    throw Exception('Gagal membuat file Excel $title');
+  }
+
   /// Save Excel file (Handles both Mobile and Desktop)
   Future<String?> saveExcelFile(Excel excel, String fileName) async {
     final fileBytes = excel.save();
@@ -591,6 +740,7 @@ class ExportService {
         }
 
         final file = File(path);
+        await file.parent.create(recursive: true);
         await file.writeAsBytes(fileBytes);
         return path;
       }

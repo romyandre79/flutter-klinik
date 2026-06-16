@@ -13,6 +13,9 @@ class PurchaseOrder {
   final DateTime? updatedAt;
   final int isSynced;
   final int? serverId;
+  final String? noFaktur;
+  final String? tglFaktur;
+  final String? keterangan;
   
   String get statusDisplay {
     switch (status.toLowerCase()) {
@@ -43,6 +46,9 @@ class PurchaseOrder {
     this.updatedAt,
     this.isSynced = 0,
     this.serverId,
+    this.noFaktur,
+    this.tglFaktur,
+    this.keterangan,
     this.supplier,
     this.items = const [],
   });
@@ -60,6 +66,9 @@ class PurchaseOrder {
       'updated_at': updatedAt?.toIso8601String(),
       'is_synced': isSynced,
       'server_id': serverId,
+      'no_faktur': noFaktur,
+      'tgl_faktur': tglFaktur,
+      'keterangan': keterangan,
     };
   }
 
@@ -76,6 +85,9 @@ class PurchaseOrder {
       updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
       isSynced: (map['is_synced'] as int?) ?? 0,
       serverId: map['server_id'] as int?,
+      noFaktur: map['no_faktur'] as String?,
+      tglFaktur: map['tgl_faktur'] as String?,
+      keterangan: map['keterangan'] as String?,
       supplier: supplier,
       items: items ?? [],
     );
@@ -93,6 +105,9 @@ class PurchaseOrder {
     DateTime? updatedAt,
     int? isSynced,
     int? serverId,
+    String? noFaktur,
+    String? tglFaktur,
+    String? keterangan,
     Supplier? supplier,
     List<PurchaseOrderItem>? items,
   }) {
@@ -108,6 +123,9 @@ class PurchaseOrder {
       updatedAt: updatedAt ?? this.updatedAt,
       isSynced: isSynced ?? this.isSynced,
       serverId: serverId ?? this.serverId,
+      noFaktur: noFaktur ?? this.noFaktur,
+      tglFaktur: tglFaktur ?? this.tglFaktur,
+      keterangan: keterangan ?? this.keterangan,
       supplier: supplier ?? this.supplier,
       items: items ?? this.items,
     );

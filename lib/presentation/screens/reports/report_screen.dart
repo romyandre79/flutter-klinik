@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:kreatif_klinik/core/theme/app_theme.dart';
@@ -246,6 +246,12 @@ class _ReportScreenState extends State<ReportScreen> {
                             case 'stock':
                               context.read<ReportCubit>().exportStockReport();
                               break;
+                            case 'expired':
+                              context.read<ReportCubit>().exportExpiredReport();
+                              break;
+                            case 'expired_7_days':
+                              context.read<ReportCubit>().exportExpired7DaysReport();
+                              break;
                           }
                         },
                         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -286,6 +292,26 @@ class _ReportScreenState extends State<ReportScreen> {
                                 Icon(Icons.inventory, color: AppThemeColors.textPrimary),
                                 SizedBox(width: AppSpacing.sm),
                                 Text('Laporan Stok'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'expired',
+                            child: Row(
+                              children: [
+                                Icon(Icons.event_busy_outlined, color: AppThemeColors.textPrimary),
+                                SizedBox(width: AppSpacing.sm),
+                                Text('Laporan Barang Expired'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'expired_7_days',
+                            child: Row(
+                              children: [
+                                Icon(Icons.event_note_outlined, color: AppThemeColors.textPrimary),
+                                SizedBox(width: AppSpacing.sm),
+                                Text('Laporan Expired-7hari'),
                               ],
                             ),
                           ),

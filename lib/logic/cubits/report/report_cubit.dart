@@ -163,6 +163,76 @@ class ReportCubit extends Cubit<ReportState> {
     }
   }
 
+  /// Export Expired Report
+  Future<void> exportExpiredReport() async {
+    final currentState = state;
+
+    emit(const ReportExporting());
+
+    try {
+      final results = await Future.wait([
+        _reportRepository.getAllProducts(),
+        _reportRepository.getStockBatches(),
+      ]);
+
+      final products = results[0] as List<dynamic>;
+      final batches = results[1] as Map<dynamic, dynamic>;
+
+      final filePath = await _exportService.exportExpiredReportToExcel(
+        products.cast(),
+        batches.cast(),
+        isSevenDays: false,
+      );
+
+      await _exportService.downloadFile(filePath);
+
+      emit(ReportExported(
+        filePath: filePath,
+        message: 'Laporan Barang Expired berhasil di-export',
+      ));
+
+      emit(currentState);
+    } catch (e) {
+      emit(ReportError(e.toString().replaceAll('Exception: ', '')));
+      emit(currentState);
+    }
+  }
+
+  /// Export Expired 7 Days Report
+  Future<void> exportExpired7DaysReport() async {
+    final currentState = state;
+
+    emit(const ReportExporting());
+
+    try {
+      final results = await Future.wait([
+        _reportRepository.getAllProducts(),
+        _reportRepository.getStockBatches(),
+      ]);
+
+      final products = results[0] as List<dynamic>;
+      final batches = results[1] as Map<dynamic, dynamic>;
+
+      final filePath = await _exportService.exportExpiredReportToExcel(
+        products.cast(),
+        batches.cast(),
+        isSevenDays: true,
+      );
+
+      await _exportService.downloadFile(filePath);
+
+      emit(ReportExported(
+        filePath: filePath,
+        message: 'Laporan Barang Expired-7hari berhasil di-export',
+      ));
+
+      emit(currentState);
+    } catch (e) {
+      emit(ReportError(e.toString().replaceAll('Exception: ', '')));
+      emit(currentState);
+    }
+  }
+
   /// Share an already-exported file (e.g. send to WA after download)
   Future<void> shareExportedFile(String filePath) async {
     try {

@@ -34,6 +34,7 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
   final TextEditingController _noFakturController = TextEditingController();
   final TextEditingController _keteranganController = TextEditingController();
   DateTime? _tglFakturDate;
+  DateTime _orderDate = DateTime.now();
   DateTime _expectedDate = DateTime.now();
 
   @override
@@ -130,7 +131,7 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
     final po = PurchaseOrder(
       supplierId: _selectedSupplier!.id!,
       supplier: _selectedSupplier, // Populate supplier object here
-      orderDate: DateTime.now(),
+      orderDate: _orderDate,
       expectedDate: _expectedDate,
       status: 'pending',
       totalAmount: totalAmount,
@@ -203,22 +204,39 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
                      onSupplierSelected: (val) => setState(() => _selectedSupplier = val),
                    ),
                    const SizedBox(height: AppSpacing.sm),
-                   // Tgl Kedatangan
-                   ListTile(
-                     title: const Text('Tgl Kedatangan'),
-                     subtitle: Text(DateFormatter.formatDate(_expectedDate)),
-                     trailing: const Icon(Icons.calendar_today),
-                     contentPadding: EdgeInsets.zero,
-                     onTap: () async {
-                       final date = await showDatePicker(
-                         context: context,
-                         initialDate: _expectedDate,
-                         firstDate: DateTime.now(),
-                         lastDate: DateTime.now().add(const Duration(days: 365)),
-                       );
-                       if (date != null) setState(() => _expectedDate = date);
-                     },
-                   ),
+                    // Tgl Pembelian
+                    ListTile(
+                      title: const Text('Tgl Pembelian'),
+                      subtitle: Text(DateFormatter.formatDate(_orderDate)),
+                      trailing: const Icon(Icons.calendar_today),
+                      contentPadding: EdgeInsets.zero,
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _orderDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (date != null) setState(() => _orderDate = date);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    // Tgl Kedatangan
+                    ListTile(
+                      title: const Text('Tgl Kedatangan'),
+                      subtitle: Text(DateFormatter.formatDate(_expectedDate)),
+                      trailing: const Icon(Icons.calendar_today),
+                      contentPadding: EdgeInsets.zero,
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _expectedDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (date != null) setState(() => _expectedDate = date);
+                      },
+                    ),
                    const Divider(height: 24),
                    Row(
                      children: [

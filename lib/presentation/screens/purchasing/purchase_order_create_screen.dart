@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_klinik/core/theme/app_theme.dart';
 import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
@@ -31,6 +31,10 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
   Supplier? _selectedSupplier;
   final List<PurchaseOrderItem> _items = [];
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _noFakturController = TextEditingController();
+  final TextEditingController _keteranganController = TextEditingController();
+  DateTime? _tglFakturDate;
+  DateTime _orderDate = DateTime.now();
   DateTime _expectedDate = DateTime.now();
 
   @override
@@ -39,6 +43,14 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
     // Load suppliers and products
     context.read<SupplierCubit>().loadSuppliers();
     context.read<ProductCubit>().loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _noFakturController.dispose();
+    _keteranganController.dispose();
+    super.dispose();
   }
 
   void _addItem() async {
@@ -119,10 +131,13 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
     final po = PurchaseOrder(
       supplierId: _selectedSupplier!.id!,
       supplier: _selectedSupplier, // Populate supplier object here
-      orderDate: DateTime.now(),
+      orderDate: _orderDate,
       expectedDate: _expectedDate,
       status: 'pending',
       totalAmount: totalAmount,
+      noFaktur: _noFakturController.text.trim().isNotEmpty ? _noFakturController.text.trim() : null,
+      tglFaktur: _tglFakturDate?.toIso8601String(),
+      keterangan: _keteranganController.text.trim().isNotEmpty ? _keteranganController.text.trim() : null,
       notes: _notesController.text,
       items: _items,
     );
@@ -177,35 +192,135 @@ class _PurchaseOrderCreateScreenState extends State<PurchaseOrderCreateScreen> {
         child: Column(
           children: [
             // Header Form
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+            Material(
               color: Colors.white,
-              child: Column(
-                children: [
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  children: [
                    // Supplier Picker
                    SearchableSupplierPicker(
                      selectedSupplier: _selectedSupplier,
                      onSupplierSelected: (val) => setState(() => _selectedSupplier = val),
                    ),
                    const SizedBox(height: AppSpacing.sm),
-                   // Tgl Kedatangan
-                   ListTile(
-                     title: const Text('Tgl Kedatangan'),
-                     subtitle: Text(DateFormatter.formatDate(_expectedDate)),
-                     trailing: const Icon(Icons.calendar_today),
-                     contentPadding: EdgeInsets.zero,
-                     onTap: () async {
-                       final date = await showDatePicker(
-                         context: context,
-                         initialDate: _expectedDate,
-                         firstDate: DateTime.now(),
-                         lastDate: DateTime.now().add(const Duration(days: 365)),
-                       );
-                       if (date != null) setState(() => _expectedDate = date);
-                     },
+                    // Tgl Pembelian
+                    ListTile(
+                      title: const Text('Tgl Pembelian'),
+                      subtitle: Text(DateFormatter.formatDate(_orderDate)),
+                      trailing: const Icon(Icons.calendar_today),
+                      contentPadding: EdgeInsets.zero,
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _orderDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (date != null) setState(() => _orderDate = date);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    // Tgl Kedatangan
+                    ListTile(
+                      title: const Text('Tgl Kedatangan'),
+                      subtitle: Text(DateFormatter.formatDate(_expectedDate)),
+                      trailing: const Icon(Icons.calendar_today),
+                      contentPadding: EdgeInsets.zero,
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _expectedDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (date != null) setState(() => _expectedDate = date);
+                      },
+                    ),
+                   const Divider(height: 24),
+                   Row(
+                     children: [
+                       Expanded(
+                         child: TextFormField(
+                           controller: _noFakturController,
+                           decoration: const InputDecoration(
+                             labelText: 'No. Faktur (Opsional)',
+                             isDense: true,
+                             border: OutlineInputBorder(),
+                             prefixIcon: Icon(Icons.receipt_long, size: 20),
+                           ),
+                         ),
+                       ),
+                       const SizedBox(width: 12),
+                       Expanded(
+                         child: InkWell(
+                           onTap: () async {
+                             final DateTime? picked = await showDatePicker(
+                               context: context,
+                               initialDate: _tglFakturDate ?? DateTime.now(),
+                               firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                               lastDate: DateTime.now().add(const Duration(days: 365)),
+                             );
+                             if (picked != null) {
+                               setState(() {
+                                 _tglFakturDate = picked;
+                               });
+                             }
+                           },
+                           child: Container(
+                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                             decoration: BoxDecoration(
+                               border: Border.all(color: Colors.grey.shade400),
+                               borderRadius: BorderRadius.circular(4),
+                             ),
+                             child: Row(
+                               children: [
+                                 const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                                 const SizedBox(width: 8),
+                                 Expanded(
+                                   child: Column(
+                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                     children: [
+                                       const Text(
+                                         'Tgl. Faktur',
+                                         style: TextStyle(
+                                           fontSize: 10,
+                                           color: Colors.grey,
+                                         ),
+                                       ),
+                                       const SizedBox(height: 2),
+                                       Text(
+                                         _tglFakturDate != null
+                                             ? DateFormatter.formatDate(_tglFakturDate!)
+                                             : '-',
+                                         style: const TextStyle(
+                                           fontSize: 12,
+                                           fontWeight: FontWeight.w500,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                               ],
+                             ),
+                           ),
+                         ),
+                       ),
+                     ],
                    ),
-                ],
-              ),
+                   const SizedBox(height: 12),
+                   TextFormField(
+                     controller: _keteranganController,
+                     decoration: const InputDecoration(
+                       labelText: 'Keterangan / Catatan (Opsional)',
+                       isDense: true,
+                       border: OutlineInputBorder(),
+                       prefixIcon: Icon(Icons.description, size: 20),
+                     ),
+                   ),
+                 ],
+               ),
+             ),
             ),
             const Divider(),
             

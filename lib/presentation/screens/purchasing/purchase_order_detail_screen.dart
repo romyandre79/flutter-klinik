@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kreatif_klinik/core/theme/app_theme.dart';
 import 'package:kreatif_klinik/core/utils/currency_formatter.dart';
@@ -134,6 +134,25 @@ class PurchaseOrderDetailScreen extends StatelessWidget {
                             _buildInfoRow('Tgl Kedatangan', order.expectedDate != null ? DateFormatter.formatDate(order.expectedDate!) : '-'),
                             const Divider(),
                             _buildInfoRow('Catatan', order.notes?.isNotEmpty == true ? order.notes! : '-'),
+                            if (order.status == 'received') ...[
+                              const Divider(),
+                              _buildInfoRow(
+                                'No. Faktur', 
+                                order.noFaktur?.isNotEmpty == true ? order.noFaktur! : '-',
+                              ),
+                              const Divider(),
+                              _buildInfoRow(
+                                'Tgl. Faktur', 
+                                order.tglFaktur?.isNotEmpty == true && DateTime.tryParse(order.tglFaktur!) != null
+                                    ? DateFormatter.formatDate(DateTime.parse(order.tglFaktur!)) 
+                                    : '-',
+                              ),
+                              const Divider(),
+                              _buildInfoRow(
+                                'Keterangan', 
+                                order.keterangan?.isNotEmpty == true ? order.keterangan! : '-',
+                              ),
+                            ],
                           ],
                         ),
                       ),

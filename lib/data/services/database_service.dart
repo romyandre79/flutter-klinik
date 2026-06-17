@@ -31,6 +31,7 @@ class DatabaseService {
       );
 
       if (outputFile != null) {
+        await Directory(File(outputFile).parent.path).create(recursive: true);
         await file.copy(outputFile);
       }
     } else {

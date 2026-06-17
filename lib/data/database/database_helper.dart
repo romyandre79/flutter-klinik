@@ -236,6 +236,9 @@ class DatabaseHelper {
         server_id INTEGER,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        no_faktur TEXT,
+        tgl_faktur TEXT,
+        keterangan TEXT,
         FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE
       )
     ''');
@@ -992,6 +995,12 @@ class DatabaseHelper {
 
       await db.execute('CREATE INDEX IF NOT EXISTS idx_order_item_batches_order_item ON order_item_batches(order_item_id)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_order_item_batches_product ON order_item_batches(product_id)');
+    }
+
+    if (oldVersion < 16) {
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN no_faktur TEXT');
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN tgl_faktur TEXT');
+      await db.execute('ALTER TABLE purchase_orders ADD COLUMN keterangan TEXT');
     }
   }
 

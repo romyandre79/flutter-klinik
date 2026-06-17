@@ -34,10 +34,18 @@ class ReceiveOrderScreen extends StatefulWidget {
 class _ReceiveOrderScreenState extends State<ReceiveOrderScreen> {
   final Map<int, List<BatchInput>> _itemBatches = {};
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _noFakturController;
+  late final TextEditingController _keteranganController;
+  DateTime? _tglFakturDate;
 
   @override
   void initState() {
     super.initState();
+    _noFakturController = TextEditingController(text: widget.order.noFaktur ?? '');
+    _keteranganController = TextEditingController(text: widget.order.keterangan ?? '');
+    _tglFakturDate = widget.order.tglFaktur != null && DateTime.tryParse(widget.order.tglFaktur!) != null
+        ? DateTime.parse(widget.order.tglFaktur!)
+        : DateTime.now();
     // Initialize one batch entry for each item, prefilled with the ordered quantity
     for (int i = 0; i < widget.order.items.length; i++) {
       final item = widget.order.items[i];
@@ -53,6 +61,8 @@ class _ReceiveOrderScreenState extends State<ReceiveOrderScreen> {
 
   @override
   void dispose() {
+    _noFakturController.dispose();
+    _keteranganController.dispose();
     for (final list in _itemBatches.values) {
       for (final input in list) {
         input.batchNoController.dispose();
@@ -190,7 +200,13 @@ class _ReceiveOrderScreenState extends State<ReceiveOrderScreen> {
     }
 
     // Submit via cubit
-    context.read<PurchaseOrderCubit>().receivePurchaseOrder(widget.order.id!, batches);
+    context.read<PurchaseOrderCubit>().receivePurchaseOrder(
+      widget.order.id!, 
+      batches,
+      noFaktur: _noFakturController.text.trim(),
+      tglFaktur: _tglFakturDate?.toIso8601String(),
+      keterangan: _keteranganController.text.trim(),
+    );
   }
 
   @override
@@ -242,16 +258,11 @@ class _ReceiveOrderScreenState extends State<ReceiveOrderScreen> {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
+                child: ListView(
                   padding: const EdgeInsets.all(16),
-                  itemCount: widget.order.items.length,
-                  itemBuilder: (context, i) {
-                    final item = widget.order.items[i];
-                    final keyId = item.id ?? i;
-                    final batches = _itemBatches[keyId] ?? [];
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
+                  children: [
+                    // Invoice Info Card
+                    Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -262,189 +273,321 @@ class _ReceiveOrderScreenState extends State<ReceiveOrderScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Product Header
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.itemName,
-                                    style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    'Dipesan: ${item.quantity} ${item.unit}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              'Informasi Penerimaan',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: AppThemeColors.primary,
+                              ),
                             ),
-                            const Divider(height: 24),
-                            
-                            // Batches List
-                            ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: batches.length,
-                              separatorBuilder: (_, index) => const SizedBox(height: 12),
-                              itemBuilder: (context, bIdx) {
-                                final batchInput = batches[bIdx];
-                                final formattedDate = batchInput.expiredDate != null
-                                    ? DateFormatter.formatDate(batchInput.expiredDate!)
-                                    : 'Pilih Tanggal';
-
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Number Circle
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 14.0, right: 8.0),
-                                      child: CircleAvatar(
-                                        radius: 10,
-                                        backgroundColor: AppThemeColors.primary.withValues(alpha: 0.1),
-                                        child: Text(
-                                          '${bIdx + 1}',
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            color: AppThemeColors.primary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    
-                                    // Batch No Input
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextFormField(
-                                        controller: batchInput.batchNoController,
-                                        decoration: const InputDecoration(
-                                          labelText: 'No. Batch',
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                          border: OutlineInputBorder(),
-                                        ),
-                                        validator: (val) {
-                                          if (val == null || val.trim().isEmpty) {
-                                            return 'Wajib diisi';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    // Expiry Date Input
-                                    Expanded(
-                                      flex: 3,
-                                      child: InkWell(
-                                        onTap: () => _selectExpiryDate(context, batchInput),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.grey.shade400),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  formattedDate,
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 13,
-                                                    color: batchInput.expiredDate != null
-                                                        ? Colors.black87
-                                                        : Colors.grey.shade500,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Icon(
-                                                Icons.calendar_today,
-                                                size: 16,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    // Qty Input
-                                    Expanded(
-                                      flex: 2,
-                                      child: TextFormField(
-                                        controller: batchInput.qtyController,
-                                        decoration: InputDecoration(
-                                          labelText: 'Qty',
-                                          isDense: true,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                          border: const OutlineInputBorder(),
-                                          suffixText: item.unit,
-                                          suffixStyle: const TextStyle(fontSize: 11),
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                        validator: (val) {
-                                          if (val == null || val.trim().isEmpty) {
-                                            return 'Wajib';
-                                          }
-                                          final qty = double.tryParse(val) ?? 0.0;
-                                          if (qty <= 0) {
-                                            return '> 0';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    
-                                    // Remove Row Button
-                                    if (batches.length > 1)
-                                      IconButton(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        constraints: const BoxConstraints(),
-                                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                        onPressed: () => _removeBatchRow(keyId, bIdx),
-                                      ),
-                                  ],
-                                );
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _noFakturController,
+                              decoration: const InputDecoration(
+                                labelText: 'No. Faktur',
+                                isDense: true,
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.receipt_long, size: 20),
+                              ),
+                              validator: (val) {
+                                if (val == null || val.trim().isEmpty) {
+                                  return 'No. Faktur wajib diisi';
+                                }
+                                return null;
                               },
                             ),
-                            
-                            // Add Batch Row Button
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12.0),
-                              child: TextButton.icon(
-                                onPressed: () => _addBatchRow(keyId),
-                                icon: const Icon(Icons.add, size: 16),
-                                label: const Text('Tambah Batch'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppThemeColors.primary,
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(50, 30),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            const SizedBox(height: 12),
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _tglFakturDate ?? DateTime.now(),
+                                  firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: const ColorScheme.light(
+                                          primary: AppThemeColors.primary,
+                                          onPrimary: Colors.white,
+                                          onSurface: AppThemeColors.textPrimary,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _tglFakturDate = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade400),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.calendar_today, size: 20, color: Colors.grey),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Tgl. Faktur',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _tglFakturDate != null
+                                                ? DateFormatter.formatDate(_tglFakturDate!)
+                                                : 'Pilih Tanggal Faktur',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _keteranganController,
+                              maxLines: 2,
+                              decoration: const InputDecoration(
+                                labelText: 'Keterangan',
+                                isDense: true,
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.description, size: 20),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Daftar Item Barang',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...List.generate(widget.order.items.length, (i) {
+                      final item = widget.order.items[i];
+                      final keyId = item.id ?? i;
+                      final batches = _itemBatches[keyId] ?? [];
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Product Header
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.itemName,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Text(
+                                      'Dipesan: ${item.quantity} ${item.unit}',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 24),
+                              
+                              // Batches List
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: batches.length,
+                                separatorBuilder: (_, index) => const SizedBox(height: 12),
+                                itemBuilder: (context, bIdx) {
+                                  final batchInput = batches[bIdx];
+                                  final formattedDate = batchInput.expiredDate != null
+                                      ? DateFormatter.formatDate(batchInput.expiredDate!)
+                                      : 'Pilih Tanggal';
+
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Number Circle
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 14.0, right: 8.0),
+                                        child: CircleAvatar(
+                                          radius: 10,
+                                          backgroundColor: AppThemeColors.primary.withValues(alpha: 0.1),
+                                          child: Text(
+                                            '${bIdx + 1}',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: AppThemeColors.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Batch No Input
+                                      Expanded(
+                                        flex: 3,
+                                        child: TextFormField(
+                                          controller: batchInput.batchNoController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'No. Batch',
+                                            isDense: true,
+                                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          validator: (val) {
+                                            if (val == null || val.trim().isEmpty) {
+                                              return 'Wajib diisi';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+
+                                      // Expiry Date Input
+                                      Expanded(
+                                        flex: 3,
+                                        child: InkWell(
+                                          onTap: () => _selectExpiryDate(context, batchInput),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(color: Colors.grey.shade400),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    formattedDate,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 13,
+                                                      color: batchInput.expiredDate != null
+                                                          ? Colors.black87
+                                                          : Colors.grey.shade500,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  Icons.calendar_today,
+                                                  size: 16,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+
+                                      // Qty Input
+                                      Expanded(
+                                        flex: 2,
+                                        child: TextFormField(
+                                          controller: batchInput.qtyController,
+                                          decoration: InputDecoration(
+                                            labelText: 'Qty',
+                                            isDense: true,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                            border: const OutlineInputBorder(),
+                                            suffixText: item.unit,
+                                            suffixStyle: const TextStyle(fontSize: 11),
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          validator: (val) {
+                                            if (val == null || val.trim().isEmpty) {
+                                              return 'Wajib';
+                                            }
+                                            final qty = double.tryParse(val) ?? 0.0;
+                                            if (qty <= 0) {
+                                              return '> 0';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      
+                                      // Remove Row Button
+                                      if (batches.length > 1)
+                                        IconButton(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          constraints: const BoxConstraints(),
+                                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                          onPressed: () => _removeBatchRow(keyId, bIdx),
+                                        ),
+                                    ],
+                                  );
+                                },
+                              ),
+                              
+                              // Add Batch Row Button
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12.0),
+                                child: TextButton.icon(
+                                  onPressed: () => _addBatchRow(keyId),
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('Tambah Batch'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppThemeColors.primary,
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(50, 30),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
                 ),
               ),
 

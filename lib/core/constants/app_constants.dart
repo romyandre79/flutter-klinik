@@ -8,7 +8,7 @@ class AppConstants {
 
   // Database
   static const String databaseName = 'kreatif_klinik.db';
-  static const int databaseVersion = 15;
+  static const int databaseVersion = 16;
 
   // Invoice
   static const String defaultInvoicePrefix = 'Otopart';
@@ -56,13 +56,13 @@ class AppConstants {
   static const String keyCustomerWa = 'customer_wa';
 
   // Default Store Info
-  static const String defaultStoreName = 'Toko Serba Ada';
-  static const String defaultStoreAddress = 'Indonesia';
-  static const String defaultStorePhone = '-';
-  static const String defaultBranchId = '';
-  static const String defaultBranchCode = '';
-  static const String defaultCustomerName = '';
-  static const String defaultCustomerWa = '';
+  static const String defaultStoreName = 'Apotek Cahaya';
+  static const String defaultStoreAddress = 'Jl Harapan Raya No 142 Pekanbaru';
+  static const String defaultStorePhone = '08217003394';
+  static const String defaultBranchId = '1';
+  static const String defaultBranchCode = 'CHY-001';
+  static const String defaultCustomerName = 'Johannes Parulian Sidabutar';
+  static const String defaultCustomerWa = '082247885833';
 
-  static const bool isDemoMode = true;
+  static const bool isDemoMode = false;
 }

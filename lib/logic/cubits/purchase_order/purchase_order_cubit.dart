@@ -53,10 +53,22 @@ class PurchaseOrderCubit extends Cubit<PurchaseOrderState> {
     }
   }
 
-  Future<void> receivePurchaseOrder(int id, List<PurchaseOrderItemBatch> batches) async {
+  Future<void> receivePurchaseOrder(
+    int id, 
+    List<PurchaseOrderItemBatch> batches, {
+    String? noFaktur,
+    String? tglFaktur,
+    String? keterangan,
+  }) async {
     try {
       emit(PoLoading());
-      await _repository.receivePurchaseOrder(id, batches);
+      await _repository.receivePurchaseOrder(
+        id, 
+        batches, 
+        noFaktur: noFaktur, 
+        tglFaktur: tglFaktur, 
+        keterangan: keterangan,
+      );
       emit(const PoOperationSuccess('Barang berhasil diterima'));
       loadPurchaseOrders();
     } catch (e) {

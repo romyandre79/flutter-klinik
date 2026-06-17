@@ -162,7 +162,13 @@ class PurchaseOrderRepository {
   }
 
   // Receive PO with multi-batch details
-  Future<void> receivePurchaseOrder(int id, List<PurchaseOrderItemBatch> batches) async {
+  Future<void> receivePurchaseOrder(
+    int id, 
+    List<PurchaseOrderItemBatch> batches, {
+    String? noFaktur,
+    String? tglFaktur,
+    String? keterangan,
+  }) async {
     final db = await _databaseHelper.database;
 
     await db.transaction((txn) async {
@@ -171,6 +177,9 @@ class PurchaseOrderRepository {
         'purchase_orders',
         {
           'status': 'received',
+          'no_faktur': noFaktur,
+          'tgl_faktur': tglFaktur,
+          'keterangan': keterangan,
           'updated_at': DateTime.now().toIso8601String(),
         },
         where: 'id = ?',
